@@ -1,61 +1,90 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.wm</groupId>
-  <artifactId>FaceUp</artifactId>
-  <version>1.0-SNAPSHOT</version>
-  <packaging>jar</packaging>
+    <groupId>com.wm</groupId>
+    <artifactId>FaceUp</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
 
-  <name>FaceUp</name>
-  <url>http://maven.apache.org</url>
+    <name>FaceUp</name>
+    <url>http://maven.apache.org</url>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 
-  <dependencies>
-    <!-- https://mvnrepository.com/artifact/io.netty/netty-all -->
-    <dependency>
-      <groupId>io.netty</groupId>
-      <artifactId>netty-all</artifactId>
-      <version>5.0.0.Alpha1</version>
-    </dependency>
-    <!-- https://mvnrepository.com/artifact/org.jboss.marshalling/jboss-marshalling-serial -->
-    <dependency>
-      <groupId>org.jboss.marshalling</groupId>
-      <artifactId>jboss-marshalling-serial</artifactId>
-      <version>1.3.0.CR9</version>
-    </dependency>
-    <dependency>
-      <groupId>org.jboss.marshalling</groupId>
-      <artifactId>jboss-marshalling</artifactId>
-      <version>1.3.0.CR9</version>
-    </dependency>
-  </dependencies>
-<build>
-  <!--<plugins>-->
-    <!--&lt;!&ndash;打jar包范围是rarget/classes  启动类是 com.alibaba.dubbo.container.Main&ndash;&gt;-->
-    <!--<plugin>-->
-      <!--<groupId>org.apache.maven.plugins</groupId>-->
-      <!--<artifactId>maven-jar-plugin</artifactId>-->
-      <!--<configuration>-->
-        <!--<classesDirectory>target/classes</classesDirectory>-->
-        <!--<archive>-->
-          <!--<manifest>-->
-            <!--&lt;!&ndash; 不记录版本号 &ndash;&gt;-->
-            <!--<useUniqueVersions>false</useUniqueVersions>-->
-            <!--<addClasspath>true</addClasspath>-->
-            <!--<classpathPrefix>lib/</classpathPrefix>-->
-            <!--<mainClass>com.wm.NIO.Client</mainClass>-->
-          <!--</manifest>-->
-          <!--<manifestEntries>-->
-            <!--<Class-Paht>.</Class-Paht>-->
-          <!--</manifestEntries>-->
-        <!--</archive>-->
-      <!--</configuration>-->
-    <!--</plugin>-->
-  <!--</plugins>-->
-</build>
+    <dependencies>
+        <!-- https://mvnrepository.com/artifact/io.netty/netty-all -->
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+            <version>5.0.0.Alpha1</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.jboss.marshalling/jboss-marshalling-serial -->
+        <dependency>
+            <groupId>org.jboss.marshalling</groupId>
+            <artifactId>jboss-marshalling-serial</artifactId>
+            <version>1.3.0.CR9</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.marshalling</groupId>
+            <artifactId>jboss-marshalling</artifactId>
+            <version>1.3.0.CR9</version>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <!--打jar包范围是rarget/classes  启动类是 com.alibaba.dubbo.container.Main-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <classesDirectory>target/classes</classesDirectory>
+                    <archive>
+                        <manifest>
+                            <!-- 不记录版本号 -->
+                            <useUniqueVersions>false</useUniqueVersions>
+                            <addClasspath>true</addClasspath>
+                            <!--maven下载的jar会放在同级文件lib里面-->
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <!--main函数的入口，这个jar的入口-->
+                            <mainClass>com.wm.NIO.Client</mainClass>
+                        </manifest>
+                        <manifestEntries>
+                            <Class-Paht>.</Class-Paht>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+
+            <!--1.需要某个特殊的 jar包，但是有不能直接通过maven依赖获取，或者说在其他环境的maven仓库内不存在，那么如何将我们所需要的jar包打入我们的生产jar包中。-->
+            <!--　　2.某个jar包内部包含的文件是我们所需要的，或者是我们希望将它提取出来放入指定的位置 ，那么除了复制粘贴，如何通过maven插件实现呢-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.0.1</version>
+                <executions>
+                    <execution>
+                        <id>copy</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <type>jar</type>
+                            <includeTypes>jar</includeTypes>
+                            <useUniqueVersions>false</useUniqueVersions>
+                            <outputDirectory>
+                                ${project.build.directory}/lib
+                            </outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+
+        </plugins>
+    </build>
 
 </project>
