@@ -1,0 +1,61 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.wm</groupId>
+  <artifactId>FaceUp</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <name>FaceUp</name>
+  <url>http://maven.apache.org</url>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <dependencies>
+    <!-- https://mvnrepository.com/artifact/io.netty/netty-all -->
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-all</artifactId>
+      <version>5.0.0.Alpha1</version>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/org.jboss.marshalling/jboss-marshalling-serial -->
+    <dependency>
+      <groupId>org.jboss.marshalling</groupId>
+      <artifactId>jboss-marshalling-serial</artifactId>
+      <version>1.3.0.CR9</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.marshalling</groupId>
+      <artifactId>jboss-marshalling</artifactId>
+      <version>1.3.0.CR9</version>
+    </dependency>
+  </dependencies>
+<build>
+  <!--<plugins>-->
+    <!--&lt;!&ndash;打jar包范围是rarget/classes  启动类是 com.alibaba.dubbo.container.Main&ndash;&gt;-->
+    <!--<plugin>-->
+      <!--<groupId>org.apache.maven.plugins</groupId>-->
+      <!--<artifactId>maven-jar-plugin</artifactId>-->
+      <!--<configuration>-->
+        <!--<classesDirectory>target/classes</classesDirectory>-->
+        <!--<archive>-->
+          <!--<manifest>-->
+            <!--&lt;!&ndash; 不记录版本号 &ndash;&gt;-->
+            <!--<useUniqueVersions>false</useUniqueVersions>-->
+            <!--<addClasspath>true</addClasspath>-->
+            <!--<classpathPrefix>lib/</classpathPrefix>-->
+            <!--<mainClass>com.wm.NIO.Client</mainClass>-->
+          <!--</manifest>-->
+          <!--<manifestEntries>-->
+            <!--<Class-Paht>.</Class-Paht>-->
+          <!--</manifestEntries>-->
+        <!--</archive>-->
+      <!--</configuration>-->
+    <!--</plugin>-->
+  <!--</plugins>-->
+</build>
+
+</project>
