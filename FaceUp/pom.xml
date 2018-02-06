@@ -49,7 +49,7 @@
                             <!--maven下载的jar会放在同级文件lib里面-->
                             <classpathPrefix>lib/</classpathPrefix>
                             <!--main函数的入口，这个jar的入口-->
-                            <mainClass>com.wm.NIO.Client</mainClass>
+                            <mainClass>com.wm.IO.Netty.demo1.Client</mainClass>
                         </manifest>
                         <manifestEntries>
                             <Class-Paht>.</Class-Paht>
