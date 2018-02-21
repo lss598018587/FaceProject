@@ -57,7 +57,6 @@ public class Server {
             //指定端口，进行监听—————sync()方法来阻塞当前线程，直到异步操作执行完毕
             ChannelFuture future = b.bind(port).sync();
             ChannelFuture f = b.bind(1234).sync();
-
             //等待关闭，就一直阻塞的，连接通信，只有程序调用退出，才退出
             future.channel().closeFuture().sync();
             System.out.println("123");
