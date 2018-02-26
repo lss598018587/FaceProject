@@ -39,9 +39,9 @@ public class SemaphoreTest {
                 System.out.println("工人" + this.num + "释放了机器：" + Thread.currentThread().getName());
                 //许可释放
                 semaphore.release();
-                System.out.println("工人" + this.num + "整理了一下机器：" + Thread.currentThread().getName());
-                Thread.sleep(2000);
-                System.out.println("工人" + this.num + "整理完毕机器：" + Thread.currentThread().getName());
+                System.out.println("工人" + this.num + "整理了一下机器：------------------" + Thread.currentThread().getName());
+                Thread.sleep(5000);
+                System.out.println("工人" + this.num + "整理完毕机器：--------------------" + Thread.currentThread().getName());
             }catch (InterruptedException e){
                 e.printStackTrace();
             }
