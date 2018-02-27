@@ -12,23 +12,21 @@ import com.alibaba.rocketmq.remoting.exception.RemotingException;
  */
 public class Producer {
     public static void main(String[] args) throws MQClientException {
-        DefaultMQProducer producer =  new DefaultMQProducer("miao_producer");
-        producer.setNamesrvAddr("10.211.55.7:9876;10.211.55.8:9876");
+        DefaultMQProducer producer=new DefaultMQProducer("quickstart_producer");
+        producer.setNamesrvAddr("h1:9876;h2:9876");
         producer.start();
 
-        for (int i = 0; i <100 ; i++) {
+        for (int i = 0; i < 100; i++) {
             try {
-                Message msg = new Message("topic_miao_producer","TagA",("hello RocketMQ"+i).getBytes());
-                SendResult send = producer.send(msg);
-                System.out.println(send);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (RemotingException e) {
-                e.printStackTrace();
-            } catch (MQBrokerException e) {
+                Message msg=new Message("TopicQuickStart","TagA",("Hello RocketMQ"+i).getBytes());
+                SendResult sendResult=producer.send(msg);
+                System.out.println(sendResult);
+            } catch (Exception e) {
+                // TODO: handle exception
                 e.printStackTrace();
             }
         }
+
         producer.shutdown();
     }
 }
