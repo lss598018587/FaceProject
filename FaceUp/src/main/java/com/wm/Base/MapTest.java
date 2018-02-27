@@ -44,25 +44,33 @@ public class MapTest {
 //            System.out.println("Key: " + e.getKey() + "--Value: " + e.getValue());
 //        }
 
+        /**
+         * 返回1的排在后面 o1 o2 返回1 输出是  o1 o2
+         * 返回-1排在前面 o1 o2 返回 -1 输出是 o2 o1
+         */
         TreeMap<String,String> treeMap = new TreeMap<String,String>(new Comparator<String>() {
             @Override
             public int compare(String o1, String o2) {
-//                if(o1.equals("开心")){
-//                    System.out.println(o1);
-//                    return -1;
-//                }
-                System.out.println(o1);
-                if(o2.equals("开心")){
-                    return -1;
+                if(o1.equals("其他")){
+                    System.out.println(o1);
+                    return  1;
+                }
+                if(o2.equals("其他")){
+                    return  -1;
                 }
                 return o1.compareTo(o2);
             }
         });
-        treeMap.put("开心","qwe");
+        treeMap.put("OPPO","qwe");
+        treeMap.put("其他","qwe2");
         treeMap.put("vivo","qwe2");
-        treeMap.put("那你","qwe2");
-        treeMap.put("苹果","qwe2");
+        treeMap.put("iPhone","qwe2");
+        treeMap.put("三星","qwe2");
         treeMap.put("华为","qwe2");
+        treeMap.put("小米","qwe2");
+        treeMap.put("荣耀","qwe2");
         System.out.println(treeMap);
+
+
     }
 }

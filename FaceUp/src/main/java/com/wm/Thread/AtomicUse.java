@@ -21,6 +21,8 @@ public class AtomicUse {
         }
         count.addAndGet(10);
 //        count.addAndGet(1);
+        //意思是，我如果在这里打印，不一定是加1，因为其他线程也在运行的原因，可能就加2或加3或加4
+        //但一个方法肯定是加10的
 //        count.addAndGet(2);
 //        count.addAndGet(3);
 //        count.addAndGet(4);
