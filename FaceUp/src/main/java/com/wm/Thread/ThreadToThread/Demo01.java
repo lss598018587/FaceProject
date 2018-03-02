@@ -7,7 +7,7 @@ import java.util.Vector;
 
 /**
  * @Author:wangmiao
- * @Desc
+ * @Desc   一些面试题
  * @Date Created in   2018/1/17 .
  *
  *
