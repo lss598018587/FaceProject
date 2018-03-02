@@ -18,7 +18,7 @@ public class ScheduledJob {
     }
 }
 
-class Temp extends Thread{
+class Temp implements Runnable{
     @Override
     public void run() {
         SimpleDateFormat format = new SimpleDateFormat("hh:mm:ss");

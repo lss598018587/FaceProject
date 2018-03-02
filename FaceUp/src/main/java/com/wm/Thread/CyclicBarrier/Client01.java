@@ -19,7 +19,6 @@ public class Client01 {
             new Worker(cyclicBarrier).start();
         }
         System.out.println("main 执行完毕");
-        ExecutorService executes = Executors.newCachedThreadPool();
     }
 
     static class Worker extends Thread{
