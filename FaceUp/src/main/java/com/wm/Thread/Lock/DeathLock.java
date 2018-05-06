@@ -35,13 +35,13 @@ public class DeathLock implements Runnable{
         if(tag.equals("b")){
             synchronized (lock2){
                 try {
-                    System.out.println("当前线程："+Thread.currentThread().getName()+"进入locak2执行");
+                    System.out.println("当前线程："+Thread.currentThread().getName()+"进入locak2bbbb执行");
                     Thread.sleep(2000);
                 }catch (Exception e){
                     e.printStackTrace();
                 }
                 synchronized (lock1){
-                    System.out.println("当前线程："+Thread.currentThread().getName()+"进入locak1执行");
+                    System.out.println("当前线程："+Thread.currentThread().getName()+"进入locak1bbbb执行");
                 }
             }
         }

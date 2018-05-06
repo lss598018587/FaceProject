@@ -1,4 +1,4 @@
-package com.wm.message.model;
+package com.wm.producer.filter;
 
 import com.alibaba.rocketmq.client.exception.MQClientException;
 import com.alibaba.rocketmq.client.producer.DefaultMQProducer;
@@ -10,13 +10,14 @@ import com.alibaba.rocketmq.common.message.Message;
  */
 public class Producer {
     public static void main(String[] args) throws MQClientException {
-        DefaultMQProducer producer=new DefaultMQProducer("quickstart_producer");
+        DefaultMQProducer producer=new DefaultMQProducer("fitler_producer");
         producer.setNamesrvAddr("h1:9876;h2:9876;h3:9876;h4:9876");
         producer.start();
 
         for (int i = 0; i < 10; i++) {
             try {
-                Message msg=new Message("TopicQuickStart","TagC",("Hello RocketMQ"+i).getBytes());
+                Message msg=new Message("FilterTopic","TagC",("Hello RocketMQ"+i).getBytes());
+                msg.putUserProperty("SequenceId",String.valueOf(i));
                 SendResult sendResult=producer.send(msg);
                 System.out.println(sendResult);
             } catch (Exception e) {

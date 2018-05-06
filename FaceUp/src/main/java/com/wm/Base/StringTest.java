@@ -10,4 +10,15 @@ package com.wm.Base;
  * @Date Created in   2018/2/26 .
  */
 public class StringTest {
+    public static final String s1;
+    public static final String s2;
+    static{
+        s1="abc";
+        s2="def";
+    }
+    public static void main(String[] args) {
+        String s3=s1+s2;
+        String s4="abcdef";
+        System.out.println(s3==s4);
+    }
 }

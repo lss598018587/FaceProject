@@ -48,29 +48,35 @@ public class MapTest {
          * 返回1的排在后面 o1 o2 返回1 输出是  o1 o2
          * 返回-1排在前面 o1 o2 返回 -1 输出是 o2 o1
          */
-        TreeMap<String,String> treeMap = new TreeMap<String,String>(new Comparator<String>() {
-            @Override
-            public int compare(String o1, String o2) {
-                if(o1.equals("其他")){
-                    System.out.println(o1);
-                    return  1;
-                }
-                if(o2.equals("其他")){
-                    return  -1;
-                }
-                return o1.compareTo(o2);
-            }
-        });
-        treeMap.put("OPPO","qwe");
-        treeMap.put("其他","qwe2");
-        treeMap.put("vivo","qwe2");
-        treeMap.put("iPhone","qwe2");
-        treeMap.put("三星","qwe2");
-        treeMap.put("华为","qwe2");
-        treeMap.put("小米","qwe2");
-        treeMap.put("荣耀","qwe2");
-        System.out.println(treeMap);
+//        TreeMap<String,String> treeMap = new TreeMap<String,String>(new Comparator<String>() {
+//            @Override
+//            public int compare(String o1, String o2) {
+//                if(o1.equals("其他")){
+//                    System.out.println(o1);
+//                    return  1;
+//                }
+//                if(o2.equals("其他")){
+//                    return  -1;
+//                }
+//                return o1.compareTo(o2);
+//            }
+//        });
+//        treeMap.put("OPPO","qwe");
+//        treeMap.put("其他","qwe2");
+//        treeMap.put("vivo","qwe2");
+//        treeMap.put("iPhone","qwe2");
+//        treeMap.put("三星","qwe2");
+//        treeMap.put("华为","qwe2");
+//        treeMap.put("小米","qwe2");
+//        treeMap.put("荣耀","qwe2");
+//        System.out.println(treeMap);
 
+        HashMap<Integer,Integer> hashMap = new HashMap<>();
+        for (int i=0;i<1000000;i++){
+            hashMap.put(i,i);
+        }
+        long start = System.currentTimeMillis();
 
+        System.out.println(hashMap.get(300234)+"----:"+(System.currentTimeMillis()-start));
     }
 }

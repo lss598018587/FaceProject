@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+<generatorConfiguration>
+
+    <classPathEntry
+            location="/Users/wangmiao/repo/mysql/mysql-connector-java/5.1.37/mysql-connector-java-5.1.37.jar" />
+
+    <context id="context1" targetRuntime="MyBatis3">
+        <!-- 不生成注释 -->
+        <commentGenerator>
+            <property name="suppressAllComments" value="true"/>
+            <property name="suppressDate" value="true"/>
+        </commentGenerator>
+        <jdbcConnection connectionURL="jdbc:mysql://127.0.0.1:3306/rocketmq?characterEncoding=utf8"
+                        driverClass="com.mysql.jdbc.Driver" password="123456" userId="root" />
+        <javaTypeResolver>
+            <property name="forceBigDecimals" value="true" />
+        </javaTypeResolver>
+
+        <!-- 生成model层 -->
+        <javaModelGenerator targetPackage="com.wm.entity"
+                            targetProject="src/main/java">
+            <property name="enableSubPackages" value="true" />
+            <property name="trimStrings" value="true" />
+        </javaModelGenerator>
+
+
+
+        <!-- 生成mapper文件 -->
+        <sqlMapGenerator targetPackage="." targetProject="src/main/resources" />
+
+        <!-- 生成dao层 -->
+        <javaClientGenerator targetPackage="com.wm.dao"
+                             targetProject="src/main/java" type="XMLMAPPER" />
+
+
+        <table schema="rocketmq" tableName="balance" domainObjectName="Balance"
+               enableCountByExample="false" enableUpdateByExample="false"
+               enableDeleteByExample="false" enableSelectByExample="false"
+               selectByExampleQueryId="false">
+            <property name="useActualColumnNames" value="false" />
+            <!--<columnOverride column="id" javaType="java.lang.Long"-->
+                            <!--jdbcType="BIGINT" />-->
+
+        </table>
+    </context>
+</generatorConfiguration>

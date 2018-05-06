@@ -1,4 +1,4 @@
-package com.wm.dirtyRead;
+package com.wm.Thread.dirtyRead;
 
 /**
  * Created by wangmiao on 2018/1/16.
