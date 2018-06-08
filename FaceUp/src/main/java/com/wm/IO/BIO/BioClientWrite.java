@@ -8,6 +8,7 @@ import java.util.Scanner;
 public class BioClientWrite {
 
 
+
     public static void main(String[] args) {
 
         Socket socket = null;

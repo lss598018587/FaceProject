@@ -30,11 +30,11 @@ public class Client  {
 
         //绑定多个端口
         ChannelFuture f = b.connect("127.0.0.1",6789).sync();
-        ChannelFuture f1 = b.connect("127.0.0.1",1234).sync();
+//        ChannelFuture f1 = b.connect("127.0.0.1",1234).sync();
         f.channel().writeAndFlush(Unpooled.copiedBuffer("王淼最帅".getBytes()));
-        f1.channel().writeAndFlush(Unpooled.copiedBuffer("王淼最帅22222222".getBytes()));
+//        f1.channel().writeAndFlush(Unpooled.copiedBuffer("王淼最帅22222222".getBytes()));
         f.channel().closeFuture().sync();
-        f1.channel().closeFuture().sync();
+//        f1.channel().closeFuture().sync();
         workGroup.shutdownGracefully();
     }
 }
