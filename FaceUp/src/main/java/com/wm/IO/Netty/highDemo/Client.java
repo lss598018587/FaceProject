@@ -38,7 +38,7 @@ public class Client  {
     public static void main(String[] args) throws InterruptedException {
         //内部类实例化
         ClientHighHandler clientHighHandler =new ClientHighHandler();
-        final ClientHighHandler.NettyClientHandler nettyClientHandler = clientHighHandler.new NettyClientHandler();
+//        final ClientHighHandler.NettyClientHandler nettyClientHandler = clientHighHandler.new NettyClientHandler();
 
         EventLoopGroup workGroup = new NioEventLoopGroup();
         Bootstrap b = new Bootstrap();
@@ -49,7 +49,7 @@ public class Client  {
                     protected void initChannel(SocketChannel sc) throws Exception {
                         sc.pipeline().addLast(new RemotingTransporterDecoder());
                         sc.pipeline().addLast(new RemotingTransporterEncoder());
-                        sc.pipeline().addLast(nettyClientHandler);
+                        sc.pipeline().addLast(clientHighHandler.new NettyClientHandler());
                     }
                 });
 
