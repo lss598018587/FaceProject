@@ -1,8 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/BaseActiveMq" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/FaceUp" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/Rocketmq-provider" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/RpcBase" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/activemq-consumer" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/activemq-provider" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rocketmq" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rocketmq-transaction-balance" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rocketmq-transaction-pay" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rocketmq/broker" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rocketmq/client" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rocketmq/common" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rocketmq/distribution" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rocketmq/example" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rocketmq/filter" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rocketmq/logappender" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rocketmq/logging" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rocketmq/namesrv" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rocketmq/openmessaging" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rocketmq/remoting" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rocketmq/srvutil" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rocketmq/store" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rocketmq/test" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rocketmq/tools" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/storm01" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/wm-spring-framework" charset="UTF-8" />
   </component>
 </project>
