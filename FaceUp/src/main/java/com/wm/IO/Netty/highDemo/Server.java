@@ -27,7 +27,7 @@ public class Server {
     public static void main(String[] args) throws InterruptedException {
 
         ServerHighHandler server = new ServerHighHandler();
-       final ServerHighHandler.NettyServerHandler serverHandler  = server.new NettyServerHandler();
+//       final ServerHighHandler.NettyServerHandler serverHandler  = server.new NettyServerHandler();
 
         //第一个线程组用于接受Client端连接的
         EventLoopGroup bossGroup = new NioEventLoopGroup();
@@ -46,7 +46,7 @@ public class Server {
                         protected void initChannel(SocketChannel ch) throws Exception {
                             ch.pipeline().addLast(new RemotingTransporterDecoder());
                             ch.pipeline().addLast(new RemotingTransporterEncoder());
-                            ch.pipeline().addLast(serverHandler); //在这里配置具体数据接收方的处理
+                            ch.pipeline().addLast( server.new NettyServerHandler()); //在这里配置具体数据接收方的处理
                         }
                     });
 

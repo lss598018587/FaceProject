@@ -1,6 +1,7 @@
-package com.wm.IO.Netty.highDemo.encode;
+package com.wm.netty.intermediate.encode;
 
-import com.wm.IO.Netty.highDemo.modal.RemotingTransporter;
+import com.wm.netty.intermediate.modal.LaopopoProtocol;
+import com.wm.netty.intermediate.modal.RemotingTransporter;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -8,7 +9,7 @@ import io.netty.handler.codec.MessageToByteEncoder;
 
 import java.io.IOException;
 
-import static com.wm.IO.Netty.highDemo.serialization.SerializerHolder.serializerImpl;
+import static com.wm.netty.intermediate.serialization.SerializerHolder.serializerImpl;
 
 
 /**
@@ -18,7 +19,7 @@ import static com.wm.IO.Netty.highDemo.serialization.SerializerHolder.serializer
  * @time 2016年8月10日
  * @modifytime
  */
-//@ChannelHandler.Sharable
+@ChannelHandler.Sharable
 public class RemotingTransporterEncoder extends MessageToByteEncoder<RemotingTransporter> {
 	public static final short MAGIC = (short) 0xbabe;
 
@@ -32,12 +33,8 @@ public class RemotingTransporterEncoder extends MessageToByteEncoder<RemotingTra
 		byte[] body = serializerImpl().writeObject(msg.getCustomHeader());
 		
 		
-		byte isCompress = 81;
-//		if(body.length > 1024){ //经过测试，压缩之后的效率低于不压缩
-//			isCompress = LaopopoProtocol.COMPRESS;
-//			body = Snappy.compress(body);
-//		}
-		
+		byte isCompress =  LaopopoProtocol.UNCOMPRESS;
+
 		out.writeShort(MAGIC). 	           //协议头
 		writeByte(msg.getTransporterType())// 传输类型 是请求还是响应
 		.writeByte(msg.getCode())          // 请求类型requestcode 表明主题信息的类型，也代表请求的类型

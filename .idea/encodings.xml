@@ -2,6 +2,7 @@
 <project version="4">
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/FaceUp" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/NettyLearn" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/Rocketmq-provider" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/RpcBase" charset="UTF-8" />
   </component>

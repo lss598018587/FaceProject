@@ -1,7 +1,7 @@
-package com.wm.IO.Netty.highDemo.decode;
+package com.wm.netty.intermediate.decode;
 
-import com.wm.IO.Netty.highDemo.modal.RemotingTransporter;
-import com.wm.IO.Netty.highDemo.protocal.LaopopoProtocol;
+import com.wm.netty.intermediate.modal.LaopopoProtocol;
+import com.wm.netty.intermediate.modal.RemotingTransporter;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ReplayingDecoder;
@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-import static com.wm.IO.Netty.highDemo.protocal.LaopopoProtocol.MAGIC;
 
 /**
  * 
@@ -35,11 +34,6 @@ public class RemotingTransporterDecoder extends ReplayingDecoder<RemotingTranspo
 	@Override
 	protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
 		System.out.println("进入到解密的地方了");
-//		in.readerIndex(0);
-//		byte[] byteArray = new byte[in.capacity()];
-//		in.readBytes(byteArray);
-//		String result = new String(byteArray);
-//		System.out.println("result>>"+result);
 		switch (state()) {
 		case HEADER_MAGIC:
 			checkMagic(in.readShort()); // MAGIC
@@ -80,10 +74,10 @@ public class RemotingTransporterDecoder extends ReplayingDecoder<RemotingTranspo
 	}
 	
 	private void checkMagic(short magic) throws RuntimeException {
-		if (MAGIC != magic) {
+		if (header.MAGIC != magic) {
 			logger.error("Magic is not match");
 			System.out.println("Magic is not match");
-            throw new RuntimeException("magic value is not equal "+MAGIC);
+            throw new RuntimeException("magic value is not equal "+header.MAGIC);
         }
 	}
 

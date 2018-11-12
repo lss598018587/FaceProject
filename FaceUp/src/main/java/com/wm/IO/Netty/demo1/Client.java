@@ -16,6 +16,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
  */
 public class Client  {
 
+//    map《long ， object>
     public static void main(String[] args) throws InterruptedException {
         EventLoopGroup workGroup = new NioEventLoopGroup();
         Bootstrap b = new Bootstrap();
@@ -31,7 +32,17 @@ public class Client  {
         //绑定多个端口
         ChannelFuture f = b.connect("127.0.0.1",6789).sync();
 //        ChannelFuture f1 = b.connect("127.0.0.1",1234).sync();
-        f.channel().writeAndFlush(Unpooled.copiedBuffer("王淼最帅".getBytes()));
+        for(int i=0;i<10;i++){
+            f.channel().writeAndFlush(Unpooled.copiedBuffer("王淼最帅".getBytes()));
+            Thread.sleep(10000);
+        }
+//        COUNT.AWAR
+
+
+
+
+
+
 //        f1.channel().writeAndFlush(Unpooled.copiedBuffer("王淼最帅22222222".getBytes()));
         f.channel().closeFuture().sync();
 //        f1.channel().closeFuture().sync();
