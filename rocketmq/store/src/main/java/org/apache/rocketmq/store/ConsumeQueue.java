@@ -84,6 +84,9 @@ public class ConsumeQueue {
         return result;
     }
 
+    /**
+     * 恢复 ConsumeQueue 内存数据
+     */
     public void recover() {
         final List<MappedFile> mappedFiles = this.mappedFileQueue.getMappedFiles();
         if (!mappedFiles.isEmpty()) {
@@ -220,6 +223,10 @@ public class ConsumeQueue {
         return 0;
     }
 
+    /**
+     * 删除指定偏移量之后的逻辑文件
+     * @param phyOffet
+     */
     public void truncateDirtyLogicFiles(long phyOffet) {
 
         int logicFileSize = this.mappedFileSize;
@@ -290,6 +297,10 @@ public class ConsumeQueue {
         }
     }
 
+    /**
+     * 获取最后一条消息对应物理队列的下一个偏移量
+     * @return
+     */
     public long getLastOffset() {
         long lastOffset = -1;
 
@@ -335,6 +346,10 @@ public class ConsumeQueue {
         return cnt;
     }
 
+    /**
+     * 根据物理队列最小 offset计算修正逻辑队列最小 offset
+     * @param phyMinOffset
+     */
     public void correctMinOffset(long phyMinOffset) {
         MappedFile mappedFile = this.mappedFileQueue.getFirstMappedFile();
         long minExtAddr = 1;
@@ -482,6 +497,11 @@ public class ConsumeQueue {
         }
     }
 
+    /**
+     * 根据消息序号索引获取 consumequeue 数据
+     * @param startIndex
+     * @return
+     */
     public SelectMappedBufferResult getIndexBuffer(final long startIndex) {
         int mappedFileSize = this.mappedFileSize;
         long offset = startIndex * CQ_STORE_UNIT_SIZE;
@@ -517,6 +537,9 @@ public class ConsumeQueue {
         this.minLogicOffset = minLogicOffset;
     }
 
+    /**
+     * 获取指定位置所在文件的下一个文件的起始偏移量
+     */
     public long rollNextFile(final long index) {
         int mappedFileSize = this.mappedFileSize;
         int totalUnitsInFile = mappedFileSize / CQ_STORE_UNIT_SIZE;

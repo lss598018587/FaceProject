@@ -33,6 +33,12 @@ import org.apache.rocketmq.store.DefaultMessageStore;
 import org.apache.rocketmq.store.DispatchRequest;
 import org.apache.rocketmq.store.config.StorePathConfigHelper;
 
+/**
+ * IndexService 是线程类服务，在启动 Broker 时启动该线程服务。
+ * 该类主要有两个功能，
+ * 第一，是定时的创建消息的索引；
+ * 第二是为应用层提供访问 index索引文件的接口
+ */
 public class IndexService {
     private static final InternalLogger log = InternalLoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
     /**
@@ -198,9 +204,30 @@ public class IndexService {
         return topic + "#" + key;
     }
 
+    /**
+     * （重点）创建消息的索引
+     * @param req
+     */
     public void buildIndex(DispatchRequest req) {
+        //获取index文件,逻辑如下
+        /*  A）从 IndexFile 列表中获取最后一个 IndexFile 对象；若该对象对应的
+            Index 文件没有写满，即 IndexHeader 的 indexCount 不大于 2000W；则直接返回
+            该对象；
+            B）若获得的该对象为空或者已经写满，则创建新的 IndexFile 对象，即
+            新的 Index 文件，若是因为写满了而创建，则在创建新 Index 文件时将该写满的
+            Index 文件的 endPhyOffset 和 endTimestamp 值初始化给新 Index 文件中
+            IndexHeader 的 beginPhyOffset 和 beginTimestamp。
+            C）启一个线程，调用 IndexFile 对象的 fush 将上一个写满的 Index 文
+            件持久化到磁盘物理文件中；然后更新 StoreCheckpoint.IndexMsgTimestamp
+            为该写满的 Index 文件中 IndexHeader 的 endTimestamp；
+        */
         IndexFile indexFile = retryGetAndCreateIndexFile();
         if (indexFile != null) {
+            /*  遍历 requestQueue 队列中的请求消息。 将每个请求消息的
+                commitlogOffset 值与获取的 IndexFile 文件的 endPhyOffset 进行比较，若小
+                于 endPhyOffset 值，则直接忽略该条请求信息； 对于消息类型为 Prepared 和
+                RollBack 的也直接忽略掉
+            */
             long endPhyOffset = indexFile.getEndPhyOffset();
             DispatchRequest msg = req;
             String topic = msg.getTopic();
@@ -218,7 +245,12 @@ public class IndexService {
                 case MessageSysFlag.TRANSACTION_ROLLBACK_TYPE:
                     return;
             }
-
+            /*
+                对于一个 topic 可以有多个 key 值，每个 key 值以空格分隔，遍历每个
+                key 值，将 topic-key 值作为 putKey 方法的入参 key 值，将该 topic 的物理偏
+                移量存入 Index 文件中，若存入失败则再次获取 IndexFile 对象重复调用 putKey
+                方法。
+            */
             if (req.getUniqKey() != null) {
                 indexFile = putKey(indexFile, msg, buildKey(topic, req.getUniqKey()));
                 if (indexFile == null) {

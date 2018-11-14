@@ -1076,6 +1076,12 @@ public class DefaultMessageStore implements MessageStore {
         return null;
     }
 
+    /**
+     * 根据 topic 和 queueId 查找 ConsumeQueue。
+     * @param topic
+     * @param queueId
+     * @return
+     */
     public ConsumeQueue findConsumeQueue(String topic, int queueId) {
         ConcurrentMap<Integer, ConsumeQueue> map = consumeQueueTable.get(topic);
         if (null == map) {
@@ -1703,6 +1709,10 @@ public class DefaultMessageStore implements MessageStore {
         }
     }
 
+    /**
+     * 该服务线程会一直不间断的监听 reputFromOffset 偏移量之后的 commitlog数据， 若 commitlog 数据有增加，
+     * 即 reputFromOffset 偏移量之后新增了数据，则获取出来并创建 consumequeue 和 index
+     */
     class ReputMessageService extends ServiceThread {
 
         private volatile long reputFromOffset = 0;

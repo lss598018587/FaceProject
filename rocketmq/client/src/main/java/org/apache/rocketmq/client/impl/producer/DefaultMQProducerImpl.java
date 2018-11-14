@@ -146,6 +146,24 @@ public class DefaultMQProducerImpl implements MQProducerInner {
         this.start(true);
     }
 
+    /**
+     * 1、检查 DefaultMQProducerImpl.ServiceState 的状态（初始化状态为
+     * ServiceState.CREATE_JUST）；只有状态为 CREATE_JUST 时才启动该Producer；
+     * 其他状态均不执行启动过程；
+     * 2、 将 DefaultMQProducerImpl.ServiceState 置为 start_failed,以免客户端同一个进程中重复启动
+     * 3、检查 producerGroup 是否合法
+     * 4、 若 producerGroup 不等于“ CLIENT_INNER_PRODUCER”则设置 Producer的实例名（ instanceName）；
+     * 5、 构建该 Producer 的 ClientID，等于 IP 地址@instanceName；
+     * 6，创建 MQClientInstance 对象。如果该ClientID对应的MQClientInstance存在则直接返回。说明一个 IP 客户端下面的应用，只有在启动多个进程的情况下才会创建多个 MQClientInstance 对象；
+     * 7、 将 DefaultMQProducerImpl 对象在 MQClientInstance 中注册，以producerGroup 为 key 值、 DefaultMQProducerImpl 对象为 values 值存入
+     * 8、以主题名“ TBW102”为 key 值，新初始化的 TopicPublishInfo 对象为 value值存入 DefaultMQProducerImpl.topicPublishInfoTable 变量中；
+     * 9、 入参 startFactory 等于 true， 故调用 MQClientInstance.start 方法启
+     * 动 MQClientInstance 对象；
+     * 10、设置 DefaultMQProducerImpl 的 ServiceState 为 RUNNING；
+     * 11、立即调用 MQClientInstance.sendHeartbeatToAllBrokerWithLock()方法
+     * @param startFactory
+     * @throws MQClientException
+     */
     public void start(final boolean startFactory) throws MQClientException {
         switch (this.serviceState) {
             case CREATE_JUST:
@@ -490,6 +508,16 @@ public class DefaultMQProducerImpl implements MQProducerInner {
         this.mqFaultStrategy.updateFaultItem(brokerName, currentLatency, isolation);
     }
 
+    /**
+     * 1、 检查 DefaultMQProducerImpl 的 ServiceState 是否为 RUNNING
+     * 2、 校验 Message 消息对象的各个字段的合法性，其中 Message 对象的 body的长度不能大于 128KB；
+     * 3、以 Message 消息中的 topic 为参数获取TopicPublishInfo
+     * 4、若TopicPublishInfo不为空，设置消息重试次数和超时时间。
+     * 5，选择发送的 Broker 和 QueueId，即选择 MessageQueue 对象。
+     * 6、调用 sendKernelImpl进行消息发送
+     * 7、对于同步方式发送消息，若未发送成功，并且 Producer 设置允许选择另
+     * 一个 Broker 进行发送，则从第 4 步的检查发送失败次数和发送时间是否已经超过阀值开始重新执行；否则直接返回；
+     */
     private SendResult sendDefaultImpl(
         Message msg,
         final CommunicationMode communicationMode,
@@ -503,7 +531,6 @@ public class DefaultMQProducerImpl implements MQProducerInner {
         long beginTimestampFirst = System.currentTimeMillis();
         long beginTimestampPrev = beginTimestampFirst;
         long endTimestamp = beginTimestampFirst;
-        //来检测映射 队列是否存在 是否正常
         TopicPublishInfo topicPublishInfo = this.tryToFindTopicPublishInfo(msg.getTopic());
         if (topicPublishInfo != null && topicPublishInfo.ok()) {
             boolean callTimeout = false;
@@ -526,7 +553,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
                             callTimeout = true;
                             break;
                         }
-
+                        //调用 sendKernelImpl进行消息发送
                         sendResult = this.sendKernelImpl(msg, mq, communicationMode, sendCallback, topicPublishInfo, timeout - costTime);
                         endTimestamp = System.currentTimeMillis();
                         this.updateFaultItem(mq.getBrokerName(), endTimestamp - beginTimestampPrev, false);
