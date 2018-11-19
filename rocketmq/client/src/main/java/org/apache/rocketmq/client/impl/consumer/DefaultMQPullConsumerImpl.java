@@ -532,37 +532,45 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
     }
 
     public synchronized void start() throws MQClientException {
+        //检查 DefaultMQPushConsumerImpl.ServiceState 的状态
         switch (this.serviceState) {
+            //只有状态为 CREATE_JUST 时才启动该 Consumer；
             case CREATE_JUST:
+                //将 DefaultMQPushConsumerImpl.ServiceState 置为 start_failed,防止一个进程中重复启动
                 this.serviceState = ServiceState.START_FAILED;
-
+                //检查参数是否正确
                 this.checkConfig();
-
+                //对 DefaultMQPushConsumer.subscription 变量进行的设置，要将此 Map 变量值转换为 SubscriptionData 对象；
                 this.copySubscription();
-
+                //若消息模式为集群模式且实例名（ instanceName）等于“ DEFAULT”，则
+                //取该进程的 PID 作为该 Consumer 的实例名（ instanceName）；
                 if (this.defaultMQPullConsumer.getMessageModel() == MessageModel.CLUSTERING) {
                     this.defaultMQPullConsumer.changeInstanceNameToPID();
                 }
-
+                //创建 MQClientInstance 对象，需要判断是否已经创建
                 this.mQClientFactory = MQClientManager.getInstance().getAndCreateMQClientInstance(this.defaultMQPullConsumer, this.rpcHook);
-
+                //设置参数
                 this.rebalanceImpl.setConsumerGroup(this.defaultMQPullConsumer.getConsumerGroup());
                 this.rebalanceImpl.setMessageModel(this.defaultMQPullConsumer.getMessageModel());
                 this.rebalanceImpl.setAllocateMessageQueueStrategy(this.defaultMQPullConsumer.getAllocateMessageQueueStrategy());
                 this.rebalanceImpl.setmQClientFactory(this.mQClientFactory);
-
+                //初始化 PullAPIWrapper 对象
                 this.pullAPIWrapper = new PullAPIWrapper(
                     mQClientFactory,
                     this.defaultMQPullConsumer.getConsumerGroup(), isUnitMode());
+                //注册 FilterMessageHook 列表，用于消息的过滤；
                 this.pullAPIWrapper.registerFilterMessageHook(filterMessageHookList);
 
+                //若在应用层通过 DefaultMQPushConsumer.setOffsetStore
                 if (this.defaultMQPullConsumer.getOffsetStore() != null) {
                     this.offsetStore = this.defaultMQPullConsumer.getOffsetStore();
                 } else {
                     switch (this.defaultMQPullConsumer.getMessageModel()) {
+                        //若消息模式是广播（ BROADCASTING），则初始化LocalFileOffsetStore 对象并赋值给
                         case BROADCASTING:
                             this.offsetStore = new LocalFileOffsetStore(this.mQClientFactory, this.defaultMQPullConsumer.getConsumerGroup());
                             break;
+                        //若消息模式是集群（ CLUSTERING），则初始化 RemoteBrokerOffsetStore 对象并赋值给DefaultMQPushConsumerImpl.offsetStore 变量
                         case CLUSTERING:
                             this.offsetStore = new RemoteBrokerOffsetStore(this.mQClientFactory, this.defaultMQPullConsumer.getConsumerGroup());
                             break;
@@ -571,10 +579,11 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
                     }
                     this.defaultMQPullConsumer.setOffsetStore(this.offsetStore);
                 }
-
+                //将本地的 offsets.json 文件内容加载到 LocalFileOffsetStore.offsetTable 变量中
                 this.offsetStore.load();
-
+                //将 DefaultMQPushConsumerImpl 对象在 MQClientInstance 中注册
                 boolean registerOK = mQClientFactory.registerConsumer(this.defaultMQPullConsumer.getConsumerGroup(), this);
+                //说明在一个客户端的一个进程下面启动多个Consumer 时 consumerGroup 名字不能一样，否则无法启动；
                 if (!registerOK) {
                     this.serviceState = ServiceState.CREATE_JUST;
 
@@ -583,8 +592,10 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
                         null);
                 }
 
+                //启动 MQClientInstance 对象
                 mQClientFactory.start();
                 log.info("the consumer [{}] start OK", this.defaultMQPullConsumer.getConsumerGroup());
+                //设置 DefaultMQPushConsumerImpl 的 ServiceState 为 RUNNING；
                 this.serviceState = ServiceState.RUNNING;
                 break;
             case RUNNING:
