@@ -49,10 +49,26 @@ public class RouteInfoManager {
     private static final InternalLogger log = InternalLoggerFactory.getLogger(LoggerName.NAMESRV_LOGGER_NAME);
     private final static long BROKER_CHANNEL_EXPIRED_TIME = 1000 * 60 * 2;
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
+    /**
+     * 主题与topic配置的对应关系，topics.json的topicConfigTable数据，
+     * 在QueueData对象中记录了该topic的BrokerName
+     */
     private final HashMap<String/* topic */, List<QueueData>> topicQueueTable;
+    /**
+     * Broker名称与broker属性的map
+     */
     private final HashMap<String/* brokerName */, BrokerData> brokerAddrTable;
+    /**
+     * 集群与broker集合的对应关系
+     */
     private final HashMap<String/* clusterName */, Set<String/* brokerName */>> clusterAddrTable;
+    /**
+     * broker的信息集合
+     */
     private final HashMap<String/* brokerAddr */, BrokerLiveInfo> brokerLiveTable;
+    /**
+     * broker地址与过滤器集合
+     */
     private final HashMap<String/* brokerAddr */, List<String>/* Filter Server */> filterServerTable;
 
     public RouteInfoManager() {
@@ -112,7 +128,11 @@ public class RouteInfoManager {
         try {
             try {
                 this.lock.writeLock().lockInterruptibly();
-
+                /**
+                    维护 RouteInfoManager.clusterAddrTable 变量； 若 Broker 集群名字不
+                    在该 Map 变量中，则初始化一个 Set 集合，将 brokerName 存入该 Set 集合中，
+                    然后以 clusterName 为 key 值，该 Set 集合为 values 值存入此 Map 变量中
+                */
                 Set<String> brokerNames = this.clusterAddrTable.get(clusterName);
                 if (null == brokerNames) {
                     brokerNames = new HashSet<String>();
@@ -121,7 +141,15 @@ public class RouteInfoManager {
                 brokerNames.add(brokerName);
 
                 boolean registerFirst = false;
-
+                /**
+                    维护 RouteInfoManager.brokerAddrTable 变量，该变量是维护 Broker
+                    的名称、 ID、地址等信息的。 若该 brokername 不在该 Map 变量中，则创建
+                    BrokerData 对象，该对象包含了 brokername，以及 brokerId 和 brokerAddr 为
+                    K-V 的 brokerAddrs 变量；然后以 brokername 为 key 值将 BrokerData 对象存入
+                    该 brokerAddrTable 变量中； 说明同一个 BrokerName 下面可以有多个不同
+                    BrokerId 的 Broker 存在，表示一个 BrokerName 有多个 Broker 存在，通过
+                    BrokerId 来区分主备
+                */
                 BrokerData brokerData = this.brokerAddrTable.get(brokerName);
                 if (null == brokerData) {
                     registerFirst = true;
@@ -130,9 +158,10 @@ public class RouteInfoManager {
                 }
                 String oldAddr = brokerData.getBrokerAddrs().put(brokerId, brokerAddr);
                 registerFirst = registerFirst || (null == oldAddr);
-
+                //若 Broker 的注册请求消息中 topic 的配置不为空，并且该 Broker 是主用（即 brokerId=0）
                 if (null != topicConfigWrapper
                     && MixAll.MASTER_ID == brokerId) {
+                    //则根据 NameServer 存储的 Broker 版本信息来判断是否需要更新 NameServer 端的 topic 配置信息
                     if (this.isBrokerTopicConfigChanged(brokerAddr, topicConfigWrapper.getDataVersion())
                         || registerFirst) {
                         ConcurrentMap<String, TopicConfig> tcTable =
@@ -144,7 +173,7 @@ public class RouteInfoManager {
                         }
                     }
                 }
-
+                //初始化 BrokerLiveInfo 对象并以 broker 地址为 key 值存入brokerLiveTable:HashMap<String/* brokerAddr */, BrokerLiveInfo>变量中
                 BrokerLiveInfo prevBrokerLiveInfo = this.brokerLiveTable.put(brokerAddr,
                     new BrokerLiveInfo(
                         System.currentTimeMillis(),
@@ -154,7 +183,7 @@ public class RouteInfoManager {
                 if (null == prevBrokerLiveInfo) {
                     log.info("new broker registered, {} HAServer: {}", brokerAddr, haServerAddr);
                 }
-
+                //对于 filterServerList 不为空的， 以 broker 地址为 key 值存入
                 if (filterServerList != null) {
                     if (filterServerList.isEmpty()) {
                         this.filterServerTable.remove(brokerAddr);
@@ -162,10 +191,11 @@ public class RouteInfoManager {
                         this.filterServerTable.put(brokerAddr, filterServerList);
                     }
                 }
-
+                //找到该 BrokerName 下面的主用 Broker（ BrokerId=0）
                 if (MixAll.MASTER_ID != brokerId) {
                     String masterAddr = brokerData.getBrokerAddrs().get(MixAll.MASTER_ID);
                     if (masterAddr != null) {
+                        //主用 Broker 地址从brokerLiveTable 中获取 BrokerLiveInfo 对象，取该对象的 HaServerAddr 值
                         BrokerLiveInfo brokerLiveInfo = this.brokerLiveTable.get(masterAddr);
                         if (brokerLiveInfo != null) {
                             result.setHaServerAddr(brokerLiveInfo.getHaServerAddr());
@@ -360,6 +390,13 @@ public class RouteInfoManager {
         }
     }
 
+    /**
+     *
+     * 功能描述: 根据Topic获取Broker信息和topic配置信息
+     *
+     * @auther: miaomiao
+     * @date: 18/11/14 下午3:07
+     */
     public TopicRouteData pickupTopicRouteData(final String topic) {
         TopicRouteData topicRouteData = new TopicRouteData();
         boolean foundQueueData = false;

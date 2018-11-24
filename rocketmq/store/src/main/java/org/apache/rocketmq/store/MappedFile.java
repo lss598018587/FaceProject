@@ -211,9 +211,7 @@ public class MappedFile extends ReferenceResource {
     public AppendMessageResult appendMessagesInner(final MessageExt messageExt, final AppendMessageCallback cb) {
         assert messageExt != null;
         assert cb != null;
-
         int currentPos = this.wrotePosition.get();
-
         if (currentPos < this.fileSize) {
             ByteBuffer byteBuffer = writeBuffer != null ? writeBuffer.slice() : this.mappedByteBuffer.slice();
             byteBuffer.position(currentPos);
@@ -312,6 +310,11 @@ public class MappedFile extends ReferenceResource {
 
     /**
      * 消息刷盘操作
+     * （1）首先判断文件是否已经写满类，即wrotePosition等于fileSize，若写慢则进行刷盘操作
+     * （2）检测内存中尚未刷盘的消息页数是否大于最小刷盘页数，不够页数也暂时不刷盘。
+     * （3）MappedFile的父类是ReferenceResource，该父类作用是记录MappedFile中的引用次数，为正表示资源可用，刷盘前加一，然后将wrotePosotion的值赋给committedPosition，再减一。
+     * @param commitLeastPages
+     * @return
      */
     public int commit(final int commitLeastPages) {
         if (writeBuffer == null) {
@@ -398,7 +401,10 @@ public class MappedFile extends ReferenceResource {
 
     /**
      * 随机读操作
-     * 读取从指定位置开始的所有消息
+     * 读取从指定位置开始的所有消息，还有一种是读取指定位置开始的指定消息大小的消息内容。
+     * 这两个方法均是调用 ByteBuffer 的 slice 和 limit 方法获取消息内容，
+     * 然后初始化 SelectMapedBufferResult 对象并返回；
+     * 该对象的 startOffset 变量是读取消息的开始位置加上该文件的起始偏移量；
      * @param pos
      * @param size
      * @return

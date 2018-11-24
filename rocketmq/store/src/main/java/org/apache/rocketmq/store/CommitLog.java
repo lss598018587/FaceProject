@@ -162,7 +162,8 @@ public class CommitLog {
         boolean checkCRCOnRecover = this.defaultMessageStore.getMessageStoreConfig().isCheckCRCOnRecover();
         final List<MappedFile> mappedFiles = this.mappedFileQueue.getMappedFiles();
         if (!mappedFiles.isEmpty()) {
-            // Began to recover from the last third file
+            // 从 MapedFileQueue 的 MapedFile 列表的倒数第三个对象（即倒数第三个文件）开始遍历每块消息单元，
+            //若总共没有三个文件，则从第一个文件开始遍历每块消息单元
             int index = mappedFiles.size() - 3;
             if (index < 0)
                 index = 0;
@@ -172,15 +173,16 @@ public class CommitLog {
             long processOffset = mappedFile.getFileFromOffset();
             long mappedFileOffset = 0;
             while (true) {
+                //进行 CRC 的校验，在校验过程中，若检查到第 5 至 8 字节 MAGICCODE 字段等于 BlankMagicCode （ cbd43194）则返回 msgSize=0
+                //的 DispatchRequest 对象；若校验未通过或者读取到的信息为空则返回msgSize=-1 的 DispatchRequest 对象；
                 DispatchRequest dispatchRequest = this.checkMessageAndReturnSize(byteBuffer, checkCRCOnRecover);
                 int size = dispatchRequest.getMsgSize();
-                // Normal data
+                // 对于 msgSize 大于零，则读取的偏移量 mapedFileOffset 累加 msgSize；
                 if (dispatchRequest.isSuccess() && size > 0) {
                     mappedFileOffset += size;
                 }
-                // Come the end of the file, switch to the next file Since the
-                // return 0 representatives met last hole,
-                // this can not be included in truncate offset
+                //若等于零，则表示读取到了文件的最后一块信息，则继续读取下一个 MapedFile
+                //对象的文件； 直到消息的 CRC 校验未通过或者读取完所有信息为止
                 else if (dispatchRequest.isSuccess() && size == 0) {
                     index++;
                     if (index >= mappedFiles.size()) {
@@ -201,8 +203,9 @@ public class CommitLog {
                     break;
                 }
             }
-
+            //计算有效信息的最后位置 processOffset，取最后读取的MapedFile 对象的 fileFromOffset 加上最后读取的位置 mapedFileOffset 值。
             processOffset += mappedFileOffset;
+            //更新数据
             this.mappedFileQueue.setFlushedWhere(processOffset);
             this.mappedFileQueue.setCommittedWhere(processOffset);
             this.mappedFileQueue.truncateDirtyFiles(processOffset);
@@ -516,6 +519,13 @@ public class CommitLog {
         return beginTimeInLock;
     }
 
+    /**
+     * 写入消息
+     * Broker在收到producer的消息后，会间接调用CommitLog.putMessage(MessageExtBrokerInner msg)进行消息的写入。
+     *
+     * @param msg
+     * @return
+     */
     public PutMessageResult putMessage(final MessageExtBrokerInner msg) {
         // Set the storage time
         msg.setStoreTimestamp(System.currentTimeMillis());
@@ -531,18 +541,20 @@ public class CommitLog {
         int queueId = msg.getQueueId();
 
         final int tranType = MessageSysFlag.getTransactionValue(msg.getSysFlag());
+        //获取消息的 sysflag 字段，检查消息是否是非事务性
         if (tranType == MessageSysFlag.TRANSACTION_NOT_TYPE
             || tranType == MessageSysFlag.TRANSACTION_COMMIT_TYPE) {
-            // Delay Delivery
+            //获取消息延时投递时间级别
             if (msg.getDelayTimeLevel() > 0) {
                 if (msg.getDelayTimeLevel() > this.defaultMessageStore.getScheduleMessageService().getMaxDelayLevel()) {
                     msg.setDelayTimeLevel(this.defaultMessageStore.getScheduleMessageService().getMaxDelayLevel());
                 }
-
+                //topic值更改为 “ SCHEDULE_TOPIC_XXXX”
                 topic = ScheduleMessageService.SCHEDULE_TOPIC;
+                //根据延迟级别获取延时消息的队列 ID（ queueId 等于延迟级别减去 1） 并更改 queueId 值
                 queueId = ScheduleMessageService.delayLevel2QueueId(msg.getDelayTimeLevel());
 
-                // Backup real topic, queueId
+                //将消息中原真实的 topic 和 queueId 存入消息属性中；
                 MessageAccessor.putProperty(msg, MessageConst.PROPERTY_REAL_TOPIC, msg.getTopic());
                 MessageAccessor.putProperty(msg, MessageConst.PROPERTY_REAL_QUEUE_ID, String.valueOf(msg.getQueueId()));
                 msg.setPropertiesString(MessageDecoder.messageProperties2String(msg.getProperties()));
@@ -565,6 +577,8 @@ public class CommitLog {
             // global
             msg.setStoreTimestamp(beginLockTimestamp);
 
+            //调用 MapedFileQueue.getLastMapedFile 方法获取或者创建最后一个文件（即MapedFile 列表中的最后一个 MapedFile 对象），
+            //若还没有文件或者已有的最后一个文件已经写满则创建一个新的文件，即创建一个新的 MapedFile 对象并返回
             if (null == mappedFile || mappedFile.isFull()) {
                 mappedFile = this.mappedFileQueue.getLastMappedFile(0); // Mark: NewFile may be cause noise
             }
@@ -573,8 +587,13 @@ public class CommitLog {
                 beginTimeInLock = 0;
                 return new PutMessageResult(PutMessageStatus.CREATE_MAPEDFILE_FAILED, null);
             }
-
+            //消息内容写入 MapedFile.mappedByteBuffer： MappedByteBuffer 对象，
+            //即写入消息缓存中；由后台服务线程定时的将缓存中的消息刷盘到物理文件中
             result = mappedFile.appendMessage(msg, this.appendMessageCallback);
+            //若最后一个 MapedFile 剩余空间不足够写入此次的消息内容，即返回状态为
+            //END_OF_FILE 标记， 则再次调用 MapedFileQueue.getLastMapedFile 方法获取新
+            //的 MapedFile 对象然后调用 MapedFile.appendMessage 方法重写写入，最后继续
+            //执行后续处理操作；若为 PUT_OK 标记则继续后续处理；若为其他标记则返回错误信息给上层
             switch (result.getStatus()) {
                 case PUT_OK:
                     break;
@@ -629,11 +648,16 @@ public class CommitLog {
     }
 
     public void handleDiskFlush(AppendMessageResult result, PutMessageResult putMessageResult, MessageExt messageExt) {
-        // Synchronization flush
+        // 若该 Broker 是同步刷盘，并且消息的 property 属性中“ WAIT”参数,
+        //表示是否等待服务器将消息存储完毕再返回（可能是等待刷盘完成或者等待同步复制到其他服务器） )为空或者为 TRUE
         if (FlushDiskType.SYNC_FLUSH == this.defaultMessageStore.getMessageStoreConfig().getFlushDiskType()) {
             final GroupCommitService service = (GroupCommitService) this.flushCommitLogService;
             if (messageExt.isWaitStoreMsgOK()) {
+                //构建 GroupCommitRequest 对象，其中 nextOffset 变量的值等于wroteOffset（写入的开始物理位置）加上 wroteBytes（写入的大小） ,
+                //表示下一次写入消息的开始位置
                 GroupCommitRequest request = new GroupCommitRequest(result.getWroteOffset() + result.getWroteBytes());
+                //将该对象存入 GroupCommitService.requestsWrite 写请求队列中
+                //该线程的 doCommit 方法中遍历读队列的数据，检查MapedFileQueue.committedWhere（刷盘刷到哪里的记录）
                 service.putRequest(request);
                 boolean flushOK = request.waitForFlush(this.defaultMessageStore.getMessageStoreConfig().getSyncFlushTimeout());
                 if (!flushOK) {
@@ -645,7 +669,7 @@ public class CommitLog {
                 service.wakeup();
             }
         }
-        // Asynchronous flush
+        //若该 Broker 为异步刷盘（ASYNC_FLUSH） ，唤醒 FlushRealTimeService 线程服务
         else {
             if (!this.defaultMessageStore.getMessageStoreConfig().isTransientStorePoolEnable()) {
                 flushCommitLogService.wakeup();
@@ -656,8 +680,11 @@ public class CommitLog {
     }
 
     public void handleHA(AppendMessageResult result, PutMessageResult putMessageResult, MessageExt messageExt) {
+        //若该Broker为同步双写主用（ SYNC_MASTER）
         if (BrokerRole.SYNC_MASTER == this.defaultMessageStore.getMessageStoreConfig().getBrokerRole()) {
             HAService service = this.defaultMessageStore.getHaService();
+            //并且消息的 property 属性中“ WAIT”参数为空或者为 TRUE，则等待监听主 Broker 将数据同步到从 Broker
+            //的结果，若同步失败，则置 PutMessageResult 对象的 putMessageStatus 变量为FLUSH_SLAVE_TIMEOUT
             if (messageExt.isWaitStoreMsgOK()) {
                 // Determine whether to wait
                 if (service.isSlaveOK(result.getWroteOffset() + result.getWroteBytes())) {
@@ -1149,6 +1176,12 @@ public class CommitLog {
         }
     }
 
+    /**
+     * 该类实现了 AppendMessageCallback 回调类的 doAppend，顺序写方法的具体逻辑如下：
+     * 1）获取当前内存对象的写入位置（ wrotePostion 变量值）；若写入位置没有超过文件大小则继续顺序写入；
+     * 2）由内存对象 mappedByteBuffer 创建一个指向同一块内存的 ByteBuffer对象，并将内存对象的写入指针指向写入位置；
+     * 3）以文件的起始偏移量（ fileFromOffset）、 ByteBuffer 对象、该内存对象剩余的空间（ fileSize-wrotePostion）、消息对象 msg 为参数调用
+     */
     class DefaultAppendMessageCallback implements AppendMessageCallback {
         // File at the end of the minimum fixed length empty
         private static final int END_FILE_MIN_BLANK_LENGTH = 4 + 4;
@@ -1515,5 +1548,16 @@ public class CommitLog {
             byteBuffer.limit(limit);
         }
 
+    }
+
+    public static void main(String[] args) {
+        System.out.println(MessageSysFlag.MULTI_TAGS_FLAG);
+        System.out.println(1<<1);
+        System.out.println(1<<2);
+        System.out.println(1<<3);
+        System.out.println(2<<3);
+        System.out.println(4<<3);
+        System.out.println(4<<5);
+        System.out.println(3<<5);
     }
 }

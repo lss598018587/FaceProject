@@ -219,6 +219,17 @@ public class BrokerController {
         return queryThreadPoolQueue;
     }
 
+    /**
+     * (1)加载 topics.json、 consumerOffset.json、 subscriptionGroup.json 文件，
+     * 分别将各文件的数据存入 TopicConfigManager、 ConsumerOffsetManager、SubscriptionGroupManager 对象中；
+     *
+     * (2)初始化 DefaultMessageStore 对象，该对象是应用层访问存储层的访问类；
+     *
+     * （3）调用 DefaultMessageStore.load 加载数据
+     *
+     * @return
+     * @throws CloneNotSupportedException
+     */
     public boolean initialize() throws CloneNotSupportedException {
         boolean result = this.topicConfigManager.load();
 

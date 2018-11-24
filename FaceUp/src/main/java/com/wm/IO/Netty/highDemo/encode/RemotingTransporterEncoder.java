@@ -18,7 +18,7 @@ import static com.wm.IO.Netty.highDemo.serialization.SerializerHolder.serializer
  * @time 2016年8月10日
  * @modifytime
  */
-@ChannelHandler.Sharable
+//@ChannelHandler.Sharable
 public class RemotingTransporterEncoder extends MessageToByteEncoder<RemotingTransporter> {
 	public static final short MAGIC = (short) 0xbabe;
 
