@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Implementation-Title: rocketmq-console-ng
+Implementation-Version: 1.0.0
+Built-By: wangmiao
+Implementation-Vendor-Id: org.apache
+Created-By: IntelliJ IDEA
+Build-Jdk: 1.8.0_121
+Main-Class: ${start-class}
+
