@@ -42,28 +42,38 @@ import org.apache.rocketmq.store.util.LibC;
 import sun.nio.ch.DirectBuffer;
 
 public class MappedFile extends ReferenceResource {
+    //默认页大小为4k
     public static final int OS_PAGE_SIZE = 1024 * 4;
     protected static final InternalLogger log = InternalLoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
-
+    //JVM中映射的虚拟内存总大小
     private static final AtomicLong TOTAL_MAPPED_VIRTUAL_MEMORY = new AtomicLong(0);
-
+    //JVM中mmap的数量
     private static final AtomicInteger TOTAL_MAPPED_FILES = new AtomicInteger(0);
+    //当前写文件的位置
     protected final AtomicInteger wrotePosition = new AtomicInteger(0);
     //ADD BY ChenYang
     protected final AtomicInteger committedPosition = new AtomicInteger(0);
     private final AtomicInteger flushedPosition = new AtomicInteger(0);
+    //映射文件的大小
     protected int fileSize;
+    //映射的fileChannel对象
     protected FileChannel fileChannel;
     /**
      * Message will put to here first, and then reput to FileChannel if writeBuffer is not null.
      */
     protected ByteBuffer writeBuffer = null;
     protected TransientStorePool transientStorePool = null;
+    //映射的文件名
     private String fileName;
+    //映射的起始偏移量
     private long fileFromOffset;
+    //映射的文件
     private File file;
+    //映射的内存对象
     private MappedByteBuffer mappedByteBuffer;
+    //最后一条消息保存时间
     private volatile long storeTimestamp = 0;
+    //是不是刚刚创建的
     private boolean firstCreateInQueue = false;
 
     public MappedFile() {
@@ -228,10 +238,14 @@ public class MappedFile extends ReferenceResource {
     }
 
     public boolean appendMessage(final byte[] data) {
+        //找出当前要的写入位置
         int currentPos = this.wrotePosition.get();
-
+        //如果当前位置加上要写入的数据大小小于等于文件大小，则说明剩余空间足够写入。
         if ((currentPos + data.length) <= this.fileSize) {
             try {
+                //则由内存对象 mappedByteBuffer 创建一个指向同一块内存的
+                //ByteBuffer 对象，并将内存对象的写入指针指向写入位置；然后将该二进制信
+                //息写入该内存对象，同时将 wrotePostion 值增加消息的大小；
                 this.fileChannel.position(currentPos);
                 this.fileChannel.write(ByteBuffer.wrap(data));
             } catch (Throwable e) {
@@ -296,6 +310,9 @@ public class MappedFile extends ReferenceResource {
         return this.getFlushedPosition();
     }
 
+    /**
+     * 消息刷盘操作
+     */
     public int commit(final int commitLeastPages) {
         if (writeBuffer == null) {
             //no need to commit data to file channel, so just regard wrotePosition as committedPosition.
@@ -379,6 +396,13 @@ public class MappedFile extends ReferenceResource {
         return this.fileSize == this.wrotePosition.get();
     }
 
+    /**
+     * 随机读操作
+     * 读取从指定位置开始的所有消息
+     * @param pos
+     * @param size
+     * @return
+     */
     public SelectMappedBufferResult selectMappedBuffer(int pos, int size) {
         int readPosition = getReadPosition();
         if ((pos + size) <= readPosition) {
