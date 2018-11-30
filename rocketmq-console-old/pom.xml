@@ -55,6 +55,11 @@
 			<version>${rocketmq.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>com.alibaba.rocketmq</groupId>
+			<artifactId>rocketmq-store</artifactId>
+			<version>${rocketmq.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>commons-lang</groupId>
 			<artifactId>commons-lang</artifactId>
 			<version>${commons-lang.version}</version>

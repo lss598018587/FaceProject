@@ -51,7 +51,7 @@ public class MappedFile extends ReferenceResource {
     private static final AtomicInteger TOTAL_MAPPED_FILES = new AtomicInteger(0);
     //当前写文件的位置
     protected final AtomicInteger wrotePosition = new AtomicInteger(0);
-    //ADD BY ChenYang
+    //Flush到什么位置
     protected final AtomicInteger committedPosition = new AtomicInteger(0);
     private final AtomicInteger flushedPosition = new AtomicInteger(0);
     //映射文件的大小
@@ -130,6 +130,7 @@ public class MappedFile extends ReferenceResource {
     private static ByteBuffer viewed(ByteBuffer buffer) {
         String methodName = "viewedBuffer";
 
+        // JDK7中将DirectByteBuffer类中的viewedBuffer方法换成了attachment方法
         Method[] methods = buffer.getClass().getMethods();
         for (int i = 0; i < methods.length; i++) {
             if (methods[i].getName().equals("attachment")) {
@@ -208,10 +209,20 @@ public class MappedFile extends ReferenceResource {
         return appendMessagesInner(messageExtBatch, cb);
     }
 
+    /**
+     * 向MapedBuffer追加消息<br>
+     *
+     * @param messageExt
+     *            要追加的消息
+     * @param cb
+     *            用来对消息进行序列化，尤其对于依赖MapedFile Offset的属性进行动态序列化
+     * @return 是否成功，写入多少数据
+     */
     public AppendMessageResult appendMessagesInner(final MessageExt messageExt, final AppendMessageCallback cb) {
         assert messageExt != null;
         assert cb != null;
         int currentPos = this.wrotePosition.get();
+        // 表示有空余空间
         if (currentPos < this.fileSize) {
             ByteBuffer byteBuffer = writeBuffer != null ? writeBuffer.slice() : this.mappedByteBuffer.slice();
             byteBuffer.position(currentPos);
@@ -227,14 +238,23 @@ public class MappedFile extends ReferenceResource {
             this.storeTimestamp = result.getStoreTimestamp();
             return result;
         }
+        // 上层应用应该保证不会走到这里
         log.error("MappedFile.appendMessage return null, wrotePosition: {} fileSize: {}", currentPos, this.fileSize);
         return new AppendMessageResult(AppendMessageStatus.UNKNOWN_ERROR);
     }
 
+    /**
+     * 文件起始偏移量
+     */
     public long getFileFromOffset() {
         return this.fileFromOffset;
     }
 
+    /**
+     * 向存储层追加数据，一般在SLAVE存储结构中使用
+     *
+     * @return 返回写入了多少数据
+     */
     public boolean appendMessage(final byte[] data) {
         //找出当前要的写入位置
         int currentPos = this.wrotePosition.get();
@@ -279,9 +299,6 @@ public class MappedFile extends ReferenceResource {
         return false;
     }
 
-    /**
-     * @return The current flushed position
-     */
     public int flush(final int flushLeastPages) {
         if (this.isAbleToFlush(flushLeastPages)) {
             if (this.hold()) {

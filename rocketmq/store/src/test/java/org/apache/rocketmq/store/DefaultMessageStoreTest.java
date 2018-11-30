@@ -21,6 +21,7 @@ import java.io.File;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.OverlappingFileLockException;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -48,6 +49,7 @@ public class DefaultMessageStoreTest {
 
     @Before
     public void init() throws Exception {
+//        StoreHost = new InetSocketAddress(	"111.230.96.74",10911);
         StoreHost = new InetSocketAddress(InetAddress.getLocalHost(), 8123);
         BornHost = new InetSocketAddress(InetAddress.getByName("127.0.0.1"), 0);
 
@@ -79,6 +81,17 @@ public class DefaultMessageStoreTest {
             master.shutdown();
             master.destroy();
         }
+    }
+
+
+    @Test(expected = OverlappingFileLockException.class)
+    public void viewMessageById() throws Exception {
+        byte[] data = UtilAll.string2bytes("2F4BCAAF00002A9F000000000000034E".substring(16, 32));
+        ByteBuffer bb = ByteBuffer.wrap(data);
+        long offset = bb.getLong(0);
+        final SelectMappedBufferResult selectMappedBufferResult =
+                messageStore.selectOneMessageByOffset(offset);
+        System.out.println(selectMappedBufferResult);
     }
 
     @After

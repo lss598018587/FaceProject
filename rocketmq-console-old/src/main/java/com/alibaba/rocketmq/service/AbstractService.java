@@ -19,6 +19,7 @@ public abstract class AbstractService {
 
 
     protected DefaultMQAdminExt getDefaultMQAdminExt() {
+        //初始化监控客户端
         DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt();
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
         return defaultMQAdminExt;
