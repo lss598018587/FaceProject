@@ -270,11 +270,15 @@ public class MapedFile extends ReferenceResource {
      * @return
      */
     public int commit(final int flushLeastPages) {
+        //判断当前是否能刷盘
         if (this.isAbleToFlush(flushLeastPages)) {
+            //类似于一个智能指针，控制刷盘线程数
             if (this.hold()) {
                 int value = this.wrotePostion.get();
+                //刷盘，内存到硬盘
                 this.mappedByteBuffer.force();
                 this.committedPosition.set(value);
+                //释放智能指针
                 this.release();
             }
             else {
@@ -296,8 +300,9 @@ public class MapedFile extends ReferenceResource {
         this.committedPosition.set(pos);
     }
 
-
+    //判断是否能刷盘
     private boolean isAbleToFlush(final int flushLeastPages) {
+        //已经刷到的位置
         int flush = this.committedPosition.get();
         int write = this.wrotePostion.get();
 
@@ -307,6 +312,7 @@ public class MapedFile extends ReferenceResource {
         }
 
         // 只有未刷盘数据满足指定page数目才刷盘
+        //满足写到内存的offset比已经刷盘的offset大4K*4(默认的最小刷盘页数，一页默认4k)
         if (flushLeastPages > 0) {
             return ((write / OS_PAGE_SIZE) - (flush / OS_PAGE_SIZE)) >= flushLeastPages;
         }
