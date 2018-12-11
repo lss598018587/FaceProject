@@ -17,7 +17,7 @@
 package com.tongbanjie.rocketmqConsole.model;
 
 import com.google.common.base.Charsets;
-import com.alibaba.rocketmq.common.message.MessageExt;
+import org.apache.rocketmq.common.message.MessageExt;
 import org.springframework.beans.BeanUtils;
 
 import java.net.SocketAddress;

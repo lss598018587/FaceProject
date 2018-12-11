@@ -17,11 +17,11 @@
 
 package com.tongbanjie.rocketmqConsole.service;
 
-import com.alibaba.rocketmq.common.Pair;
-import com.alibaba.rocketmq.common.message.MessageExt;
-import com.alibaba.rocketmq.common.protocol.body.ConsumeMessageDirectlyResult;
+import org.apache.rocketmq.common.Pair;
+import org.apache.rocketmq.common.message.MessageExt;
+import org.apache.rocketmq.common.protocol.body.ConsumeMessageDirectlyResult;
+import org.apache.rocketmq.tools.admin.api.MessageTrack;
 import com.tongbanjie.rocketmqConsole.model.MessageView;
-import com.alibaba.rocketmq.tools.admin.api.MessageTrack;
 
 import java.util.List;
 
