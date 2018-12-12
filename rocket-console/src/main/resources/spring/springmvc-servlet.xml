@@ -15,42 +15,42 @@
 	<mvc:annotation-driven />
     <!--如果找不到对应的 controller 则去找静态文件，不配置则会404-->
     <mvc:default-servlet-handler/>
-    
+	<!--<mvc:resources mapping="static/*"/>-->
 	<!-- 自动扫描且只扫描@Controller -->
-	<context:component-scan base-package="com.alibaba.rocketmq.action" use-default-filters="false">
+	<context:component-scan base-package="com.tongbanjie.rocketmqConsole.controller" use-default-filters="false">
 		<context:include-filter type="annotation" expression="org.springframework.stereotype.Controller" />
 	</context:component-scan>
 
-	<bean id="velocityConfigurer" class="org.springframework.web.servlet.view.velocity.VelocityConfigurer">
-		<property name="resourceLoaderPath">
-			<value>WEB-INF/vm/</value>
-		</property>
-		<property name="velocityProperties">
-			<props>
-				<prop key="directive.foreach.counter.name">velocityCount</prop>
-				<prop key="directive.foreach.counter.initial.value">1</prop>
-				<prop key="input.encoding">utf-8</prop>
-				<prop key="output.encoding">utf-8</prop>
-				<prop key="velocimacro.library">macro.vm</prop>
-				<prop key="velocimacro.library.autoreload">true</prop>
-			</props>
-		</property>
-	</bean>
+	<!--<bean id="velocityConfigurer" class="org.springframework.web.servlet.view.velocity.VelocityConfigurer">-->
+		<!--<property name="resourceLoaderPath">-->
+			<!--<value>WEB-INF/vm/</value>-->
+		<!--</property>-->
+		<!--<property name="velocityProperties">-->
+			<!--<props>-->
+				<!--<prop key="directive.foreach.counter.name">velocityCount</prop>-->
+				<!--<prop key="directive.foreach.counter.initial.value">1</prop>-->
+				<!--<prop key="input.encoding">utf-8</prop>-->
+				<!--<prop key="output.encoding">utf-8</prop>-->
+				<!--<prop key="velocimacro.library">macro.vm</prop>-->
+				<!--<prop key="velocimacro.library.autoreload">true</prop>-->
+			<!--</props>-->
+		<!--</property>-->
+	<!--</bean>-->
 
-	<bean id="viewResolver" class="org.springframework.web.servlet.view.velocity.VelocityViewResolver">
-		<property name="suffix" value=".vm" />
-		<property name="exposeRequestAttributes" value="true" />
-		<property name="exposeSessionAttributes" value="true" />
-		<property name="contentType" value="text/html;charset=UTF-8" />
-		<property name="toolboxConfigLocation" value="/WEB-INF/velocity-toolbox.xml" />
-	</bean>
+	<!--<bean id="viewResolver" class="org.springframework.web.servlet.view.velocity.VelocityViewResolver">-->
+		<!--<property name="suffix" value=".vm" />-->
+		<!--<property name="exposeRequestAttributes" value="true" />-->
+		<!--<property name="exposeSessionAttributes" value="true" />-->
+		<!--<property name="contentType" value="text/html;charset=UTF-8" />-->
+		<!--<property name="toolboxConfigLocation" value="/WEB-INF/velocity-toolbox.xml" />-->
+	<!--</bean>-->
 
-	<bean id="exceptionResolver" class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
-		<property name="exceptionMappings">
-			<props>
-				<prop key="org.springframework.web.multipart.MaxUploadSizeExceededException">redirect:/error.html</prop>
-			</props>
-		</property>
-	</bean>
+	<!--<bean id="exceptionResolver" class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">-->
+		<!--<property name="exceptionMappings">-->
+			<!--<props>-->
+				<!--<prop key="org.springframework.web.multipart.MaxUploadSizeExceededException">redirect:/error.html</prop>-->
+			<!--</props>-->
+		<!--</property>-->
+	<!--</bean>-->
 
 </beans>
