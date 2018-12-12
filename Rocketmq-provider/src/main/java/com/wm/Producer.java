@@ -10,20 +10,21 @@ import com.alibaba.rocketmq.common.message.Message;
  */
 public class Producer {
     public static void main(String[] args) throws MQClientException {
-        DefaultMQProducer producer=new DefaultMQProducer("quickstart_producer");
-        producer.setNamesrvAddr("rocketmq-master1:9876;rocketmq-master2:9876");
+        DefaultMQProducer producer=new DefaultMQProducer("MORGANA_PARTITION_COPPER_SUCC");
+        producer.setNamesrvAddr("rocketmq.tongbanjie.com:9876");
         producer.start();
 
-        for (int i = 0; i < 5; i++) {
+//        for (int i = 0; i < 5; i++) {
             try {
-                Message msg=new Message("TopicQuickStart","TagA",("Hello RocketMQ"+i).getBytes());
+//                Message msg=new Message("TopicQuickStart","TagA",("Hello RocketMQ"+i).getBytes());
+                Message msg=new Message("morgana-partition-copper-succ","",("Hello RocketMQ").getBytes());
                 SendResult sendResult=producer.send(msg);
                 System.out.println(sendResult);
             } catch (Exception e) {
                 // TODO: handle exception
                 e.printStackTrace();
             }
-        }
+//        }
 
 //        producer.shutdown();
     }
