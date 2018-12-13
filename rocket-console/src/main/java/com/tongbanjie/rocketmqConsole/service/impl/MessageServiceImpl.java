@@ -75,7 +75,7 @@ public class MessageServiceImpl implements MessageService {
 
             MessageExt messageExt = mqAdminExt.viewMessage(subject, msgId);
             List<MessageTrack> messageTrackList = messageTrackDetail(messageExt);
-            return new Pair<>(MessageView.fromMessageExt(messageExt), messageTrackList);
+            return new Pair<MessageView, List<MessageTrack>>(MessageView.fromMessageExt(messageExt), messageTrackList);
         }
         catch (Exception e) {
             throw Throwables.propagate(e);

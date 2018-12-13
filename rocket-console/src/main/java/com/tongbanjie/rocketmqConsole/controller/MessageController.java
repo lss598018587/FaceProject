@@ -36,7 +36,7 @@ import java.util.Map;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
-@RequestMapping("/message")
+@RequestMapping("/static/message")
 public class MessageController {
     private Logger logger = LoggerFactory.getLogger(MessageController.class);
     @Resource
