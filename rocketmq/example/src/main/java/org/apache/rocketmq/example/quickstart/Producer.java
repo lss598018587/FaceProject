@@ -44,7 +44,7 @@ public class Producer {
          * }
          * </pre>
          */
-
+        producer.setNamesrvAddr("name-server1-ip:9876;name-server2-ip:9876");
         /*
          * Launch the instance.
          */
