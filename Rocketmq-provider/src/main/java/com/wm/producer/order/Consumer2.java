@@ -13,9 +13,10 @@ import java.util.List;
  */
 public class Consumer2 {
     public Consumer2() {
-        String name = "order_consumer";
+        String name = "miao_consumer";
         DefaultMQPushConsumer consumer = new DefaultMQPushConsumer(name);
-        consumer.setNamesrvAddr("h1:9876;h2:9876;h3:9876;h4:9876");
+        consumer.setNamesrvAddr("rocketmq-nameserver1:9876;rocketmq-nameserver2:9876");
+//        consumer.setNamesrvAddr("h1:9876;h2:9876;h3:9876;h4:9876");
         //广播消费，每个consumer收到同样的消息
 //        consumer.setMessageModel(MessageModel.BROADCASTING);
         //集群消费，就是负载均衡，每个consumer消费的总和等于mq服务消息的总数（暂且不说重复消费）
@@ -27,7 +28,8 @@ public class Consumer2 {
          */
         consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
         try {
-            consumer.subscribe("TopicQuickStart","TagA || TagB || TagC");
+//            consumer.subscribe("TopicQuickStart","TagA || TagB || TagC");
+            consumer.subscribe("morgana-partition-copper-succ","");
             consumer.registerMessageListener(new Listenner() );
             consumer.start();
         }catch (Exception e){
@@ -39,7 +41,7 @@ public class Consumer2 {
     public static void main(String[] args)  {
 
         Consumer2 consumer = new Consumer2();
-        System.out.println("Consumer start");
+        System.out.println("Consumer2 start");
     }
 //MessageListenerConcurrently
        class Listenner implements MessageListenerOrderly {

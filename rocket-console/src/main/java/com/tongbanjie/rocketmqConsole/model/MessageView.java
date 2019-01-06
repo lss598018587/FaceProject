@@ -26,17 +26,29 @@ import java.util.Map;
 public class MessageView {
 
     /** from MessageExt **/
+    // 队列ID <PUT>
     private int queueId;
+    // 存储记录大小
     private int storeSize;
+    // 队列偏移量
     private long queueOffset;
+    // 消息标志位 <PUT>
     private int sysFlag;
+    // 消息在客户端创建时间戳 <PUT>
     private long bornTimestamp;
+    // 消息来自哪里 <PUT>
     private SocketAddress bornHost;
+    // 消息在服务器存储时间戳
     private long storeTimestamp;
+    // 消息存储在哪个服务器 <PUT>
     private SocketAddress storeHost;
+    // 消息ID
     private String msgId;
+    // 消息对应的Commit Log Offset
     private long commitLogOffset;
+    // 消息体CRC
     private int bodyCRC;
+    // 当前消息被某个订阅组重新消费了几次（订阅组之间独立计数）
     private int reconsumeTimes;
     private long preparedTransactionOffset;
     /**from MessageExt**/

@@ -360,13 +360,13 @@ public class MQAdminExtImpl implements MQAdminExt {
     @Override
     @Deprecated
     public void start() throws MQClientException {
-        throw new IllegalStateException("thisMethod is deprecated.use org.apache.rocketmq.console.aspect.admin.MQAdminAspect instead of this");
+        throw new IllegalStateException("thisMethod is deprecated.use com.tongbanjie.rocketmqConsole.aspect.admin.MQAdminAspect instead of this");
     }
 
     @Override
     @Deprecated
     public void shutdown() {
-        throw new IllegalStateException("thisMethod is deprecated.use org.apache.rocketmq.console.aspect.admin.MQAdminAspect instead of this");
+        throw new IllegalStateException("thisMethod is deprecated.use com.tongbanjie.rocketmqConsole.aspect.admin.MQAdminAspect instead of this");
     }
 
     // below is 3.2.6->3.5.8 updated
