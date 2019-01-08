@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import javax.annotation.Resource;
 
 @Controller
-@RequestMapping("/static/cluster")
+@RequestMapping("/cluster")
 public class ClusterController {
 
     @Resource

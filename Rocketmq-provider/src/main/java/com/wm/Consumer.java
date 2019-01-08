@@ -40,9 +40,9 @@ public class Consumer {
                         String msgBody = new String (message.getBody(),"utf-8");
                         String tag = message.getTags();
                         System.out.println("topic="+topic+",msgBody="+msgBody+",tag="+tag);
-//                    if(1==1){
-//                        throw  new RuntimeException("yic");
-//                    }
+                    if(1==1){
+                        throw  new RuntimeException("yic");
+                    }
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                     if(message.getReconsumeTimes() ==3){ //当重试次数达到3次

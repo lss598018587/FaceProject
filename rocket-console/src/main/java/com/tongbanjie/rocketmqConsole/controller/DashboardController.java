@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import javax.annotation.Resource;
 
 @Controller
-@RequestMapping("/static/dashboard")
+@RequestMapping("/dashboard")
 public class DashboardController {
 
     @Resource

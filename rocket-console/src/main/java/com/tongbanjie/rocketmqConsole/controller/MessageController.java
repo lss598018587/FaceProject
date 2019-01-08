@@ -17,6 +17,7 @@
 package com.tongbanjie.rocketmqConsole.controller;
 
 import com.google.common.collect.Maps;
+import com.tongbanjie.rocketmqConsole.aspect.admin.annotation.AuthWay;
 import com.tongbanjie.rocketmqConsole.model.MessageView;
 import com.tongbanjie.rocketmqConsole.service.MessageService;
 import com.tongbanjie.rocketmqConsole.util.JsonUtil;
@@ -36,7 +37,7 @@ import java.util.Map;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
-@RequestMapping("/static/message")
+@RequestMapping("/message")
 public class MessageController {
     private Logger logger = LoggerFactory.getLogger(MessageController.class);
     @Resource

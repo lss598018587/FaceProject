@@ -17,6 +17,7 @@
 package com.tongbanjie.rocketmqConsole.controller;
 
 import com.google.common.base.Preconditions;
+import com.tongbanjie.rocketmqConsole.aspect.admin.annotation.AuthWay;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.rocketmq.common.protocol.body.ConsumerConnection;
 import com.tongbanjie.rocketmqConsole.model.ConnectionInfo;
@@ -33,7 +34,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 
 @Controller
-@RequestMapping("/static/consumer")
+@RequestMapping("/consumer")
 public class ConsumerController {
     private Logger logger = LoggerFactory.getLogger(ConsumerController.class);
 
@@ -54,6 +55,7 @@ public class ConsumerController {
 
     @RequestMapping(value = "/resetOffset.do", method = {RequestMethod.POST})
     @ResponseBody
+    @AuthWay(path="RESET_OFFSET")
     public Object resetOffset(@RequestBody ResetOffsetRequest resetOffsetRequest) {
         logger.info("op=look resetOffsetRequest={}", JsonUtil.obj2String(resetOffsetRequest));
         return consumerService.resetOffset(resetOffsetRequest);
@@ -67,12 +69,14 @@ public class ConsumerController {
 
     @RequestMapping(value = "/deleteSubGroup.do", method = {RequestMethod.POST})
     @ResponseBody
+    @AuthWay(path="DELETE_SUB_GROUP")
     public Object deleteSubGroup(@RequestBody DeleteSubGroupRequest deleteSubGroupRequest) {
         return consumerService.deleteSubGroup(deleteSubGroupRequest);
     }
 
     @RequestMapping(value = "/createOrUpdate.do", method = {RequestMethod.POST})
     @ResponseBody
+    @AuthWay(path="CONSUMER_CREATE_ORUPDATE")
     public Object consumerCreateOrUpdateRequest(@RequestBody ConsumerConfigInfo consumerConfigInfo) {
         Preconditions.checkArgument(CollectionUtils.isNotEmpty(consumerConfigInfo.getBrokerNameList()) || CollectionUtils.isNotEmpty(consumerConfigInfo.getClusterNameList()),
             "clusterName or brokerName can not be all blank");

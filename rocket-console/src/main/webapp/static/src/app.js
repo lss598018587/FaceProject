@@ -82,7 +82,7 @@ app.provider('getDictName', function () {
     var dictList = [];
 
     this.init = function () {
-        var url = "src/data/dict.json";//无法使用common服务类，地址只能写死
+        var url = "static/src/data/dict.json";//无法使用common服务类，地址只能写死
         var params = {};
         $.get(url, params, function (ret) {
             dictList = ret;
@@ -128,25 +128,25 @@ app.config(['$routeProvider', '$httpProvider','$cookiesProvider','getDictNamePro
         $httpProvider.defaults.cache = false;
 
         $routeProvider.when('/', {
-            templateUrl: 'view/pages/index.html',
+            templateUrl: 'static/view/pages/index.html',
             controller:'dashboardCtrl'
         }).when('/cluster', {
-            templateUrl: 'view/pages/cluster.html',
+            templateUrl: 'static/view/pages/cluster.html',
             controller:'clusterController'
         }).when('/topic', {
-            templateUrl: 'view/pages/topic.html',
+            templateUrl: 'static/view/pages/topic.html',
             controller:'topicController'
         }).when('/consumer', {
-            templateUrl: 'view/pages/consumer.html',
+            templateUrl: 'static/view/pages/consumer.html',
             controller:'consumerController'
         }).when('/producer', {
-            templateUrl: 'view/pages/producer.html',
+            templateUrl: 'static/view/pages/producer.html',
             controller:'producerController'
         }).when('/message', {
-            templateUrl: 'view/pages/message.html',
+            templateUrl: 'static/view/pages/message.html',
             controller:'messageController'
         }).when('/ops', {
-            templateUrl: 'view/pages/ops.html',
+            templateUrl: 'static/view/pages/ops.html',
             controller:'opsController'
         }).when('/404', {
             templateUrl: '404'

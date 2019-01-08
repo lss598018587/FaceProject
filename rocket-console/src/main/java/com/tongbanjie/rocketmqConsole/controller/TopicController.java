@@ -17,6 +17,7 @@
 package com.tongbanjie.rocketmqConsole.controller;
 
 import com.google.common.base.Preconditions;
+import com.tongbanjie.rocketmqConsole.aspect.admin.annotation.AuthWay;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.rocketmq.client.exception.MQClientException;
 import com.tongbanjie.rocketmqConsole.model.request.SendTopicMessageRequest;
@@ -32,7 +33,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 
 @Controller
-@RequestMapping("/static/topic")
+@RequestMapping("/topic")
 public class TopicController {
     private Logger logger = LoggerFactory.getLogger(TopicController.class);
 
@@ -63,6 +64,7 @@ public class TopicController {
 
     @RequestMapping(value = "/createOrUpdate.do", method = { RequestMethod.POST})
     @ResponseBody
+    @AuthWay(path = "TOPIC_CREATE_UPDATE")
     public Object topicCreateOrUpdateRequest(@RequestBody TopicConfigInfo topicCreateOrUpdateRequest) {
         Preconditions.checkArgument(CollectionUtils.isNotEmpty(topicCreateOrUpdateRequest.getBrokerNameList()) || CollectionUtils.isNotEmpty(topicCreateOrUpdateRequest.getClusterNameList()),
             "clusterName or brokerName can not be all blank");
@@ -92,6 +94,7 @@ public class TopicController {
 
     @RequestMapping(value = "/sendTopicMessage.do", method = {RequestMethod.POST})
     @ResponseBody
+    @AuthWay(path = "SEND_TOPIC_MESSAGE")
     public Object sendTopicMessage(
         @RequestBody SendTopicMessageRequest sendTopicMessageRequest) throws RemotingException, MQClientException, InterruptedException {
         return topicService.sendTopicMessageRequest(sendTopicMessageRequest);
@@ -99,12 +102,14 @@ public class TopicController {
 
     @RequestMapping(value = "/deleteTopic.do", method = {RequestMethod.POST})
     @ResponseBody
+    @AuthWay(path = "DELETE_TOPIC")
     public Object delete(@RequestParam(required = false) String clusterName, @RequestParam String topic) {
         return topicService.deleteTopic(topic, clusterName);
     }
 
     @RequestMapping(value = "/deleteTopicByBroker.do", method = {RequestMethod.POST})
     @ResponseBody
+    @AuthWay(path = "DELETE_TOPIC_BYBROKER")
     public Object deleteTopicByBroker(@RequestParam String brokerName, @RequestParam String topic) {
         return topicService.deleteTopicInBroker(brokerName, topic);
     }

@@ -6,7 +6,7 @@
 
 	<display-name>rocketmq-console</display-name>
 	<welcome-file-list>
-		<welcome-file>static/index.html</welcome-file>
+		<welcome-file>index.html</welcome-file>
 	</welcome-file-list>
 	<context-param>
 		<param-name>contextConfigLocation</param-name>

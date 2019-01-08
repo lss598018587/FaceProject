@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import javax.annotation.Resource;
 
 @Controller
-@RequestMapping("/static/monitor")
+@RequestMapping("/monitor")
 public class MonitorController {
 
     private Logger logger = LoggerFactory.getLogger(MonitorController.class);

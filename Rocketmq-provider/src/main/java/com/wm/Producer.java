@@ -17,7 +17,7 @@ public class Producer {
 //        for (int i = 0; i < 5; i++) {
             try {
 //                Message msg=new Message("TopicQuickStart","TagA",("Hello RocketMQ"+i).getBytes());
-                Message msg=new Message("morgana-partition-copper-succ","",("淼淼cool").getBytes());
+                Message msg=new Message("morgana-partition-copper-succ","",("淼淼cool-2019-01-08").getBytes());
                 SendResult sendResult=producer.send(msg);
                 System.out.println(sendResult);
             } catch (Exception e) {

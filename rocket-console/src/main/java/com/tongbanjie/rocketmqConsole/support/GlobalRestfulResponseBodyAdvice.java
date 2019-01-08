@@ -35,6 +35,13 @@ public class GlobalRestfulResponseBodyAdvice implements ResponseBodyAdvice<Objec
 
     private Logger logger = LoggerFactory.getLogger(GlobalRestfulResponseBodyAdvice.class);
 
+    /**
+     *
+     * 功能描述: 在最后返回前端的时候，会调用这个
+     *
+     * @auther: miaomiao
+     * @date: 19/1/8 下午9:01
+     */
     @Override
     public Object beforeBodyWrite(
             Object obj, MethodParameter methodParameter, MediaType mediaType,

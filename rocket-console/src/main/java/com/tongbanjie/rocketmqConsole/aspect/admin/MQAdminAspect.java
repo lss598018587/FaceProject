@@ -16,8 +16,15 @@
  */
 package com.tongbanjie.rocketmqConsole.aspect.admin;
 
+import com.tongbanjie.rocketmqConsole.aspect.admin.annotation.AuthWay;
 import com.tongbanjie.rocketmqConsole.aspect.admin.annotation.MultiMQAdminCmdMethod;
 import com.tongbanjie.rocketmqConsole.service.client.MQAdminInstance;
+import com.tongbanjie.rocketmqConsole.support.JsonResult;
+import com.tongbanjie.sso.model.TbjAuthority;
+import com.tongbanjie.sso.model.TbjAuthorityCache;
+import com.tongbanjie.sso.utils.SSOUtils;
+import com.tongbanjie.sso.utils.UserAuthUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -28,6 +35,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 @Aspect
 @Service
@@ -47,7 +57,12 @@ public class MQAdminAspect {
 
     }
 
-    @Around(value = "mQAdminMethodPointCut() || multiMQAdminMethodPointCut()")
+    @Pointcut("@annotation(com.tongbanjie.rocketmqConsole.aspect.admin.annotation.AuthWay)")
+    public void authWay() {
+    }
+
+
+    @Around(value = "mQAdminMethodPointCut() || multiMQAdminMethodPointCut() || authWay() ")
     public Object aroundMQAdminMethod(ProceedingJoinPoint joinPoint) throws Throwable {
         long start = System.currentTimeMillis();
         Object obj = null;
@@ -61,6 +76,15 @@ public class MQAdminAspect {
             else {
                 MQAdminInstance.initMQAdminInstance(0);
             }
+
+            AuthWay authWay = method.getAnnotation(AuthWay.class);
+            if (authWay != null && StringUtils.isNotBlank(authWay.path())) {
+                String path = authWay.path();
+                boolean showFlag = isShow(path);
+                if(!showFlag){
+                    return new JsonResult<Object>(-1,"用户未有权限访问");
+                }
+            }
             obj = joinPoint.proceed();
         }
         finally {
@@ -69,4 +93,24 @@ public class MQAdminAspect {
         }
         return obj;
     }
+
+
+
+
+    private boolean isShow(String code) {
+        try {
+            TbjAuthorityCache authCache = SSOUtils.getAuth();
+            Set<TbjAuthority> authorities = authCache.getAuthorities();
+
+            TbjAuthority param=new TbjAuthority();
+            param.setAuthorityCode(code);
+            param.setSystemId(UserAuthUtil.getSystemId());
+
+            return authorities.contains(param);
+        } catch (Exception e) {
+            logger.warn("获取权限列表异常", e);
+        }
+        return false;
+    }
+
 }

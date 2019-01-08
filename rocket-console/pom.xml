@@ -70,6 +70,15 @@
             <version>${aspectj.version}</version>
         </dependency>
 
+        <!-- SSO -->
+        <dependency>
+            <groupId>com.tongbanjie.sso</groupId>
+            <artifactId>sso-facade</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <!-- SSO -->
+
+
         <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjweaver</artifactId>

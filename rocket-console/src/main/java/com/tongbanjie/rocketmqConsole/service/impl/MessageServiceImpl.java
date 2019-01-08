@@ -70,6 +70,7 @@ public class MessageServiceImpl implements MessageService {
      * @auther: miaomiao
      * @date: 18/12/11 下午9:54
      */
+    @Override
     public Pair<MessageView, List<MessageTrack>> viewMessage(String subject, final String msgId) {
         try {
 

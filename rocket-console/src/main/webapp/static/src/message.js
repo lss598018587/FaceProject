@@ -31,7 +31,7 @@ module.controller('messageController', ['$scope', 'ngDialog', '$http','Notificat
     }).success(function (resp) {
         if(resp.status ==0){
             $scope.allTopicList = resp.data.topicList.sort();
-            console.log($scope.allTopicList);
+            // console.log($scope.allTopicList);
         }else {
             Notification.error({message: resp.errMsg, delay: 2000});
         }
@@ -54,9 +54,9 @@ module.controller('messageController', ['$scope', 'ngDialog', '$http','Notificat
 
 
     $scope.queryMessageByTopic = function () {
-        console.log($scope.selectedTopic);
-        console.log($scope.timepickerBegin)
-        console.log($scope.timepickerEnd)
+        // console.log($scope.selectedTopic);
+        // console.log($scope.timepickerBegin)
+        // console.log($scope.timepickerEnd)
         $http({
             method: "GET",
             url: "message/queryMessageByTopic.query",
@@ -68,7 +68,7 @@ module.controller('messageController', ['$scope', 'ngDialog', '$http','Notificat
             }
         }).success(function (resp) {
             if (resp.status == 0) {
-                console.log(resp);
+                // console.log(resp);
                 $scope.queryMessageByTopicResult = resp.data;
                 $scope.changeShowMessageList(1,$scope.queryMessageByTopicResult.length);
                 // todo
@@ -80,8 +80,8 @@ module.controller('messageController', ['$scope', 'ngDialog', '$http','Notificat
     };
 
     $scope.queryMessageByTopicAndKey = function () {
-        console.log($scope.selectedTopic);
-        console.log($scope.key);
+        // console.log($scope.selectedTopic);
+        // console.log($scope.key);
         $http({
             method: "GET",
             url: "message/queryMessageByTopicAndKey.query",
@@ -91,7 +91,7 @@ module.controller('messageController', ['$scope', 'ngDialog', '$http','Notificat
             }
         }).success(function (resp) {
             if (resp.status == 0) {
-                console.log(resp);
+                // console.log(resp);
                 $scope.queryMessageByTopicAndKeyResult = resp.data;
                 console.log($scope.queryMessageByTopicAndKeyResult);
             }else {
@@ -111,7 +111,7 @@ module.controller('messageController', ['$scope', 'ngDialog', '$http','Notificat
             }
         }).success(function (resp) {
             if (resp.status == 0) {
-                console.log(resp);
+                // console.log(resp);
                 ngDialog.open({
                     template: 'messageDetailViewDialog',
                     controller: 'messageDetailViewDialogController',
