@@ -165,6 +165,7 @@ public class MQClientInstance {
 
 
     public void start() throws MQClientException {
+        //校验fastjson版本
         PackageConflictDetect.detectFastjson();
 
         synchronized (this) {
@@ -203,6 +204,7 @@ public class MQClientInstance {
 
 
     private void startScheduledTask() {
+        //地址不存在就会调用寻址方法
         if (null == this.clientConfig.getNamesrvAddr()) {
             this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
@@ -217,6 +219,7 @@ public class MQClientInstance {
             }, 1000 * 10, 1000 * 60 * 2, TimeUnit.MILLISECONDS);
         }
 
+        //定时从nameServer更新生产者消费者路由信息
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
             @Override
@@ -229,6 +232,8 @@ public class MQClientInstance {
             }
         }, 10, this.clientConfig.getPollNameServerInteval(), TimeUnit.MILLISECONDS);
 
+        //定期清除已经离线的Broker服务器（在从名称服务获取的路由信息中该Broker的地址已经不存在），
+        // 以及向所有仍在线的Broker发送心跳信息。
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
             @Override
@@ -242,6 +247,7 @@ public class MQClientInstance {
             }
         }, 1000, this.clientConfig.getHeartbeatBrokerInterval(), TimeUnit.MILLISECONDS);
 
+        //定期持久化各消费者队列消费进度。
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
             @Override
@@ -254,6 +260,7 @@ public class MQClientInstance {
             }
         }, 1000 * 10, this.clientConfig.getPersistConsumerOffsetInterval(), TimeUnit.MILLISECONDS);
 
+        //定期根据消费者数量调整线程池大小。
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
             @Override
@@ -540,6 +547,7 @@ public class MQClientInstance {
         }
 
         for (String topic : topicList) {
+            //将所有的生产者消费者路由信息打包通过调用updateTopicRouteInfoFronnameServer()方法更新本地客户端的所有路由信息。
             this.updateTopicRouteInfoFromNameServer(topic);
         }
     }
@@ -550,6 +558,14 @@ public class MQClientInstance {
     }
 
 
+    /**
+     * 在第一步先通过MQClientAPIImpl来封装发送更新路由信息请求给名称服务器来取得最新的路由信息，
+     * 得到新的信息将会与现有的信息进行比较，如果发生了改变，依次更新Broker，生产消费者的路由信息。
+     * @param topic
+     * @param isDefault
+     * @param defaultMQProducer
+     * @return
+     */
     public boolean updateTopicRouteInfoFromNameServer(final String topic, boolean isDefault,
                                                       DefaultMQProducer defaultMQProducer) {
         try {
@@ -917,6 +933,7 @@ public class MQClientInstance {
     }
 
 
+    //只要客户端没有被关闭，那么将会一直循环调用客户端的doRebalance()方法。
     public void doRebalance() {
         for (String group : this.consumerTable.keySet()) {
             MQConsumerInner impl = this.consumerTable.get(group);

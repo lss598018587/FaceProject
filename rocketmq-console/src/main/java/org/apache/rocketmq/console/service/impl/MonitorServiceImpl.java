@@ -37,7 +37,7 @@ public class MonitorServiceImpl implements MonitorService {
     @Resource
     private RMQConfigure rmqConfigure;
 
-    private Map<String, ConsumerMonitorConfig> configMap = new ConcurrentHashMap<>();
+    private Map<String, ConsumerMonitorConfig> configMap = new ConcurrentHashMap<String, ConsumerMonitorConfig>();
 
     @Override
     public boolean createOrUpdateConsumerMonitor(String name, ConsumerMonitorConfig config) {

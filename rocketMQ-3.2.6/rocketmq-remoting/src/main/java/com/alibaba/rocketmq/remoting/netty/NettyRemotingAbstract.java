@@ -388,7 +388,8 @@ public abstract class NettyRemotingAbstract {
         }
     }
 
-
+    //在这里会根据传入的SendCallBack对象生成相应的responseFuture任务类交由netty客户端来处理。
+    //可以看到，生成的responseFuture被netty远程客户端管理在map里，动态实现了在收到消息回复之后调用的operationCompleted()方法，将根据消息结果的异步返回调用相应的鄂onSuccess()或者onException()方法，来完成ASYNC异步的目的。
     public void invokeAsyncImpl(final Channel channel, final RemotingCommand request,
             final long timeoutMillis, final InvokeCallback invokeCallback) throws InterruptedException,
             RemotingTooMuchRequestException, RemotingTimeoutException, RemotingSendRequestException {

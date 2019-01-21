@@ -23,6 +23,8 @@ import com.alibaba.rocketmq.common.message.MessageQueue;
 /**
  * Strategy Algorithm for message allocating between consumers
  *
+ * 消费者的消息队列分配策略
+ *
  * @author shijia.wxr<vintage.wang@gmail.com>
  * @author von gosling<fengjia10@gmail.com>
  * @since 2013-7-24

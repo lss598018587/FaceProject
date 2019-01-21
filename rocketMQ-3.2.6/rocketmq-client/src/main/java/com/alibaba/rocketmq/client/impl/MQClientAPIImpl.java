@@ -131,6 +131,11 @@ public class MQClientAPIImpl {
     }
 
 
+    /**
+     * 如果一开始就没有配置相应的名称服务服务器地址，
+     * 这里将会通过MQClientAPIImpl的fetchNameServerAddr()方法主动寻址。
+     * @return
+     */
     public String fetchNameServerAddr() {
         try {
             String addrs = this.topAddressing.fetchNSAddr();
@@ -249,6 +254,7 @@ public class MQClientAPIImpl {
             Boolean.parseBoolean(System.getProperty("com.alibaba.rocketmq.client.sendSmartMsg", "true"));
 
 
+    //如果采用了ASYNC的异步发送模式，则这个最后一个参数就是在消息发送之后用来处理消息回复的类。
     public SendResult sendMessage(//
             final String addr,// 1
             final String brokerName,// 2
@@ -260,10 +266,8 @@ public class MQClientAPIImpl {
     ) throws RemotingException, MQBrokerException, InterruptedException {
         if (!UtilAll.isBlank(projectGroupPrefix)) {
             msg.setTopic(VirtualEnvUtil.buildWithProjectGroup(msg.getTopic(), projectGroupPrefix));
-            requestHeader.setProducerGroup(VirtualEnvUtil.buildWithProjectGroup(
-                requestHeader.getProducerGroup(), projectGroupPrefix));
-            requestHeader.setTopic(VirtualEnvUtil.buildWithProjectGroup(requestHeader.getTopic(),
-                projectGroupPrefix));
+            requestHeader.setProducerGroup(VirtualEnvUtil.buildWithProjectGroup( requestHeader.getProducerGroup(), projectGroupPrefix));
+            requestHeader.setTopic(VirtualEnvUtil.buildWithProjectGroup(requestHeader.getTopic(), projectGroupPrefix));
         }
 
         RemotingCommand request = null;

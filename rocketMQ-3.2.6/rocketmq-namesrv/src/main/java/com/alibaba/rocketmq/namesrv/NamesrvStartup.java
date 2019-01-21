@@ -125,7 +125,7 @@ public class NamesrvStartup {
             MixAll.properties2Object(ServerUtil.commandLine2Properties(commandLine), namesrvConfig);
 
             //调试时手工加入的变量设置
-            namesrvConfig.setRocketmqHome("D:/alibaba-rocketmq-3.2.6");
+            namesrvConfig.setRocketmqHome("/Users/miaomiao/myProject/FaceProject/rocketmq/distribution");
             
             if (null == namesrvConfig.getRocketmqHome()) {
                 System.out.println("Please set the " + MixAll.ROCKETMQ_HOME_ENV

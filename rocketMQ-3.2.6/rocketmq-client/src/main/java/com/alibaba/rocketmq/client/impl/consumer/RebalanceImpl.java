@@ -51,8 +51,10 @@ public abstract class RebalanceImpl {
     protected static final Logger log = ClientLogger.getLog();
     protected final ConcurrentHashMap<MessageQueue, ProcessQueue> processQueueTable =
             new ConcurrentHashMap<MessageQueue, ProcessQueue>(64);
+    //topic下的队列
     protected final ConcurrentHashMap<String/* topic */, Set<MessageQueue>> topicSubscribeInfoTable =
             new ConcurrentHashMap<String, Set<MessageQueue>>();
+    //topic信息的转换
     protected final ConcurrentHashMap<String /* topic */, SubscriptionData> subscriptionInner =
             new ConcurrentHashMap<String, SubscriptionData>();
     protected String consumerGroup;
@@ -266,11 +268,7 @@ public abstract class RebalanceImpl {
                     boolean changed = this.updateProcessQueueTableInRebalance(topic, mqSet);
                     if (changed) {
                         this.messageQueueChanged(topic, mqSet, mqSet);
-                        log.info("messageQueueChanged {} {} {} {}",//
-                                consumerGroup,//
-                                topic,//
-                                mqSet,//
-                                mqSet);
+                        log.info("messageQueueChanged {} {} {} {}",consumerGroup,topic,mqSet,mqSet);
                     }
                 } else {
                     log.warn("doRebalance, {}, but the topic[{}] not exist.", consumerGroup, topic);
@@ -278,7 +276,13 @@ public abstract class RebalanceImpl {
                 break;
             }
             case CLUSTERING: {
+                /**
+                 * 1.先通过topic得到topic对应的messageQueue数据
+                 */
                 Set<MessageQueue> mqSet = this.topicSubscribeInfoTable.get(topic);
+                /**
+                 * 2.根据topic来获取所有订阅这个topic的消费者
+                 */
                 List<String> cidAll = this.mQClientFactory.findConsumerIdList(topic, consumerGroup);
                 if (null == mqSet) {
                     if (!topic.startsWith(MixAll.RETRY_GROUP_TOPIC_PREFIX)) {
@@ -290,6 +294,9 @@ public abstract class RebalanceImpl {
                     log.warn("doRebalance, {} {}, get consumer id list failed", consumerGroup, topic);
                 }
 
+                /**
+                 * 3.接下来就会根据在之前配置的消息队列分配策略，调用分配策略的allocate()方法，完成消息队列的重新分配。
+                 */
                 if (mqSet != null && cidAll != null) {
                     List<MessageQueue> mqAll = new ArrayList<MessageQueue>();
                     mqAll.addAll(mqSet);
@@ -317,7 +324,9 @@ public abstract class RebalanceImpl {
                     if (allocateResult != null) {
                         allocateResultSet.addAll(allocateResult);
                     }
-
+                    /**
+                     * 4.接下来调用updateProcessQueueTableInRebalance()方法来根据重新平衡的而结果来更新处理队列
+                     */
                     boolean changed = this.updateProcessQueueTableInRebalance(topic, allocateResultSet);
                     if (changed) {
                         log.info(
@@ -328,6 +337,7 @@ public abstract class RebalanceImpl {
                                 strategy.getName(), consumerGroup, topic, this.mQClientFactory.getClientId(),
                                 allocateResultSet.size(), mqAll.size(), cidAll.size(), allocateResultSet);
 
+                        //如果消息队列在这次rebalance的过程中发生了修改，那么则会调用messageQueueChanged()方法来处理相应的改变。具体实现在RebalancePullImpl中。
                         this.messageQueueChanged(topic, mqSet, allocateResultSet);
                     }
                 }
@@ -354,6 +364,18 @@ public abstract class RebalanceImpl {
     }
 
 
+    /**
+     *
+     * 功能描述: 首先，通过遍历所有消息队列与处理队列的对应关系，如果在新的分配之后，
+     * 该消息队列已经不再是负责原来topic下的消息传送，那么这一对应关系将会被清除，
+     * 这一消息队列的数据messageQueue也会被相应的从消费者的存储中remove掉。
+     * 既然有旧的无用消息队列被清除，那自然有新的消息队列需要建立新的处理队列processQueue与其建立对应关系。
+     * 在这里将会生成pullRequest来建立新的对应关系。并通过computePullFromWhere()得到下次拉取数据的位置，
+     * 在RebalancePullImpl中具体实现了这一方法，直接返回0，来确认下一次拉取数据的位置。并将新的处理队列与对应的messageQueue放入map保存。
+     *
+     * @auther: miaomiao
+     * @date: 19/1/21 上午11:47
+     */
     private boolean updateProcessQueueTableInRebalance(final String topic, final Set<MessageQueue> mqSet) {
         boolean changed = false;
 

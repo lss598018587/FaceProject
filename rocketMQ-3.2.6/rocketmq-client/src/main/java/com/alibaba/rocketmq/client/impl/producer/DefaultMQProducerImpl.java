@@ -53,6 +53,7 @@ import java.util.concurrent.*;
 /**
  * @author shijia.wxr<vintage.wang@gmail.com>
  * @since 2013-7-24
+ * 在defaultMQProducerImpl中有一个map来缓存具体的路由队列信息。
  */
 public class DefaultMQProducerImpl implements MQProducerInner {
     private final Logger log = ClientLogger.getLog();
@@ -172,10 +173,12 @@ public class DefaultMQProducerImpl implements MQProducerInner {
                 this.defaultMQProducer.changeInstanceNameToPID();
             }
 
+            // 初始化mQClientFactory为MQClientInstance，并将该实例加入factoryTable
             this.mQClientFactory =
                     MQClientManager.getInstance().getAndCreateMQClientInstance(this.defaultMQProducer,
                         rpcHook);
 
+            // 将producer注册到MQClientInstance.producerTbale
             boolean registerOK =
                     mQClientFactory.registerProducer(this.defaultMQProducer.getProducerGroup(), this);
             if (!registerOK) {
@@ -260,6 +263,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
     }
 
 
+    //发布的topic信息为null，返回true，消息队列为空返回true
     @Override
     public boolean isPublishTopicNeedUpdate(String topic) {
         TopicPublishInfo prev = this.topicPublishInfoTable.get(topic);
@@ -624,15 +628,17 @@ public class DefaultMQProducerImpl implements MQProducerInner {
             byte[] prevBody = msg.getBody();
             try {
                 int sysFlag = 0;
+                //压缩标识
                 if (this.tryToCompressMessage(msg)) {
                     sysFlag |= MessageSysFlag.CompressedFlag;
                 }
-
+                //事物标识
                 final String tranMsg = msg.getProperty(MessageConst.PROPERTY_TRANSACTION_PREPARED);
                 if (tranMsg != null && Boolean.parseBoolean(tranMsg)) {
                     sysFlag |= MessageSysFlag.TransactionPreparedType;
                 }
 
+                //在接下里，如果该生产者配置了相关的注册了chackForbiddenHook，则在这里将会走一遍所有的注册了的checkForbidden钩子保证本来配置被禁发的消息不会被发送出去。
                 if (hasCheckForbiddenHook()) {
                     CheckForbiddenContext checkForbiddenContext = new CheckForbiddenContext();
                     checkForbiddenContext.setNameSrvAddr(this.defaultMQProducer.getNamesrvAddr());
@@ -645,6 +651,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
                     this.executeCheckForbiddenHook(checkForbiddenContext);
                 }
 
+                //类似的，在接下里如果跟之前的钩子一样的方式配置注册了sendMessageHook消息发送钩子，则会在这里遍历调用所有钩子的executesendMessageHookBefore()方法，相应的，在消息发送完毕之后也会  执行executeSendMessageHookAfter()方法。
                 if (this.hasSendMessageHook()) {
                     context = new SendMessageContext();
                     context.setProducerGroup(this.defaultMQProducer.getProducerGroup());
@@ -655,7 +662,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
                     context.setMq(mq);
                     this.executeSendMessageHookBefore(context);
                 }
-
+                //之后根据之前得到的一系列发送消息的配置，来构造发送给Broker的请求头数据。
                 SendMessageRequestHeader requestHeader = new SendMessageRequestHeader();
                 requestHeader.setProducerGroup(this.defaultMQProducer.getProducerGroup());
                 requestHeader.setTopic(msg.getTopic());
@@ -675,7 +682,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
                         MessageAccessor.clearProperty(msg, MessageConst.PROPERTY_RECONSUME_TIME);
                     }
                 }
-
+                //在一切准备就绪之后，调用客户端的API接口来实现消息的物理发送。
                 SendResult sendResult = this.mQClientFactory.getMQClientAPIImpl().sendMessage(//
                     brokerAddr,// 1
                     mq.getBrokerName(),// 2

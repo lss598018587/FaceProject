@@ -42,6 +42,13 @@ public class AllocateMessageQueueAveragely implements AllocateMessageQueueStrate
     }
 
 
+    /**
+     *
+     * 功能描述: 以默认的平均分配方式为例子来看他的allocat()方法。
+     *
+     * @auther: miaomiao
+     * @date: 19/1/19 下午4:48
+     */
     @Override
     public List<MessageQueue> allocate(String consumerGroup, String currentCID, List<MessageQueue> mqAll,
                                        List<String> cidAll) {
@@ -57,10 +64,7 @@ public class AllocateMessageQueueAveragely implements AllocateMessageQueueStrate
 
         List<MessageQueue> result = new ArrayList<MessageQueue>();
         if (!cidAll.contains(currentCID)) {
-            log.info("[BUG] ConsumerGroup: {} The consumerId: {} not in cidAll: {}", //
-                    consumerGroup, //
-                    currentCID,//
-                    cidAll);
+            log.info("[BUG] ConsumerGroup: {} The consumerId: {} not in cidAll: {}", consumerGroup, currentCID,cidAll);
             return result;
         }
 

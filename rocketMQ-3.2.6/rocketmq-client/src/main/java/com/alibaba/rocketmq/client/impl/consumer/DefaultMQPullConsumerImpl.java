@@ -63,6 +63,7 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
     private MQClientInstance mQClientFactory;
     private PullAPIWrapper pullAPIWrapper;
     private OffsetStore offsetStore;
+    //在pull消费者中，实现的是RebalancePullImpl继承自RebalanceImpl
     private RebalanceImpl rebalanceImpl = new RebalancePullImpl(this);
 
     private final long consumerStartTimestamp = System.currentTimeMillis();
@@ -524,20 +525,21 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
                         .getAllocateMessageQueueStrategy());
                 this.rebalanceImpl.setmQClientFactory(this.mQClientFactory);
 
-                this.pullAPIWrapper = new PullAPIWrapper(//
-                        mQClientFactory,//
-                        this.defaultMQPullConsumer.getConsumerGroup(), isUnitMode());
+                this.pullAPIWrapper = new PullAPIWrapper(mQClientFactory, this.defaultMQPullConsumer.getConsumerGroup(), isUnitMode());
+
                 this.pullAPIWrapper.registerFilterMessageHook(filterMessageHookList);
 
                 if (this.defaultMQPullConsumer.getOffsetStore() != null) {
                     this.offsetStore = this.defaultMQPullConsumer.getOffsetStore();
                 } else {
                     switch (this.defaultMQPullConsumer.getMessageModel()) {
+                        //在广播模式下，所有的消费者都会收到所订阅的消息，那么显然，在这个模式下面的所有消费者都会将自己消费消费消息队列的进度保存在自己本地上
                         case BROADCASTING:
                             this.offsetStore =
                                     new LocalFileOffsetStore(this.mQClientFactory,
                                             this.defaultMQPullConsumer.getConsumerGroup());
                             break;
+                        //在集群模式下，所有的消费者来平均消费消息，那么相应的，这里的消费进度将会保存在远程
                         case CLUSTERING:
                             this.offsetStore =
                                     new RemoteBrokerOffsetStore(this.mQClientFactory,

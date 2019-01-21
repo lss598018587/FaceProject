@@ -157,7 +157,7 @@ public class BrokerStartup {
 
             MixAll.properties2Object(ServerUtil.commandLine2Properties(commandLine), brokerConfig);
             //调试时手工加入的变量设置
-            brokerConfig.setRocketmqHome("D:/alibaba-rocketmq-3.2.6");
+            brokerConfig.setRocketmqHome("/Users/miaomiao/myProject/FaceProject/rocketmq/distribution");
             
             if (null == brokerConfig.getRocketmqHome()) {
                 System.out.println("Please set the " + MixAll.ROCKETMQ_HOME_ENV

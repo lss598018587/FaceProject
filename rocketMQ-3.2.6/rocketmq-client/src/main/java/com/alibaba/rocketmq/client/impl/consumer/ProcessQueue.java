@@ -47,34 +47,58 @@ public class ProcessQueue {
 
     private final Logger log = ClientLogger.getLog();
     private final ReadWriteLock lockTreeMap = new ReentrantReadWriteLock();
+    // 用来保存拉取到的消息
     private final TreeMap<Long, MessageExt> msgTreeMap = new TreeMap<Long, MessageExt>();
+    // ProcessQueue中保存的消息里的最大offset，为ConsumeQueue的offset
     private volatile long queueOffsetMax = 0L;
+    // 当前保存的消息数，放进来的时候会加，移除的时候会减
     private final AtomicLong msgCount = new AtomicLong();
-
+    // 该数据结构里的消息是否废弃
     private volatile boolean dropped = false;
+    // 上次执行拉取消息的时间
     private volatile long lastPullTimestamp = System.currentTimeMillis();
     private final static long PullMaxIdleTime = Long.parseLong(System.getProperty(
         "rocketmq.client.pull.pullMaxIdleTime", "120000"));
-
+    // 上次消费完消息后记录的时间
     private volatile long lastConsumeTimestamp = System.currentTimeMillis();
-
+    // 消费锁，主要在顺序消费和移除ProcessQueue的时候使用
     private final Lock lockConsume = new ReentrantLock();
 
     private volatile boolean locked = false;
+    // 上次锁定的时间
     private volatile long lastLockTimestamp = System.currentTimeMillis();
+    // 是否正在消息
     private volatile boolean consuming = false;
+    // 顺序消费的时候使用
     private final TreeMap<Long, MessageExt> msgTreeMapTemp = new TreeMap<Long, MessageExt>();
+    // 记录了废弃ProcessQueue的时候lockConsume的次数
     private final AtomicLong tryUnlockTimes = new AtomicLong(0);
-
+    // 该参数为调整线程池的时候提供了数据参考
     private volatile long msgAccCnt = 0;
 
 
+    /**
+     *
+     * 功能描述: 顺序消费的时候使用，消费之前会判断一下ProcessQueue锁定时间是否超过阈值(默认30000ms)，如果没有超时，代表还是持有锁
+     *
+     * @auther: miaomiao
+     * @date: 19/1/21 下午1:58
+     */
     public boolean isLockExpired() {
         boolean result = (System.currentTimeMillis() - this.lastLockTimestamp) > RebalanceLockMaxLiveTime;
         return result;
     }
 
 
+    /**
+     *
+     * 功能描述: 在拉取的时候更新lastPullTimestamp的值，
+     * 然后在rebalance的时候会去判断ProcessQueue已经超过一定的时间没有去拉取消息，
+     * 如果是的话，则将ProcessQueue废弃(setDropped(true))且从ProcessQueue和MessageQueue的对应关系中移除该ProcessQueue
+     *
+     * @auther: miaomiao
+     * @date: 19/1/21 下午2:00
+     */
     public boolean isPullExpired() {
         boolean result = (System.currentTimeMillis() - this.lastPullTimestamp) > PullMaxIdleTime;
         return result;

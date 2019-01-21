@@ -29,7 +29,9 @@ import com.alibaba.rocketmq.common.message.MessageQueue;
 public class TopicPublishInfo {
     private boolean orderTopic = false;
     private boolean haveTopicRouterInfo = false;
+    //list具体存放该topic的消息队列
     private List<MessageQueue> messageQueueList = new ArrayList<MessageQueue>();
+    //下面则表示消息发送的具体哪条队列
     private AtomicInteger sendWhichQueue = new AtomicInteger(0);
 
 
@@ -38,6 +40,7 @@ public class TopicPublishInfo {
     }
 
 
+    //消息队列为空，返回flase
     public boolean ok() {
         return null != this.messageQueueList && !this.messageQueueList.isEmpty();
     }
