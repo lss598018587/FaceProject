@@ -114,6 +114,14 @@ public class PullAPIWrapper {
     }
 
 
+
+    /**
+     *
+     * 功能描述: 对消息的具体字节流进行了反序列化，并且根据订阅的tag在这里完成对于消息的过滤。
+     *
+     * @auther: miaomiao
+     * @date: 19/1/22 上午11:47
+     */
     public PullResult processPullResult(final MessageQueue mq, final PullResult pullResult,
             final SubscriptionData subscriptionData) {
         final String projectGroupPrefix = this.mQClientFactory.getMQClientAPIImpl().getProjectGroupPrefix();

@@ -104,6 +104,13 @@ public class ProcessQueue {
         return result;
     }
 
+    /**
+     *
+     * 功能描述: 取回来的消息将会在proceeQueue当中存放在其中的treeMap中（整个操作为了保证线程安全，全程加锁），并且在之后统计消费的数量统计。
+     *
+     * @auther: miaomiao
+     * @date: 19/1/23 上午10:58
+     */
     public boolean putMessage(final List<MessageExt> msgs) {
         boolean dispatchToConsume = false;
         try {

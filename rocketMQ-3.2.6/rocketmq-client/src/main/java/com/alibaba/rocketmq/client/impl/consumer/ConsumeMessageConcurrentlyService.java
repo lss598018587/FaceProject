@@ -213,6 +213,20 @@ public class ConsumeMessageConcurrentlyService implements ConsumeMessageService 
     }
 
 
+    /**
+     *
+     * 功能描述: 如果消息消费成功，则将在这里进行对ack也就是消费成功的消息数量进行赋值。
+     *
+     * 在广播模式下，即使消息消费失败，也只是进行日志记录，并没有别的操作。
+     *
+     * 在集群模式下，如果消息消费失败，将会先尝试将消息发送回broker，如果发送回给broker也失败了，
+     * 那么将会将这条消息在一定时间后重新尝试消费，否则就从消息失败数组中移除这个消息。
+     *
+     * 最后，更新消息队列的消费进度。PushConsumer的消息消费结束。
+     *
+     * @auther: miaomiao
+     * @date: 19/1/23 下午12:03
+     */
     public void processConsumeResult(//
             final ConsumeConcurrentlyStatus status, //
             final ConsumeConcurrentlyContext context, //
@@ -230,8 +244,10 @@ public class ConsumeMessageConcurrentlyService implements ConsumeMessageService 
             }
             int ok = ackIndex + 1;
             int failed = consumeRequest.getMsgs().size() - ok;
+            //统计时间，和消费次数的累加
             this.getConsumerStatsManager().incConsumeOKTPS(consumerGroup,
                 consumeRequest.getMessageQueue().getTopic(), ok);
+            //统计失败
             this.getConsumerStatsManager().incConsumeFailedTPS(consumerGroup,
                 consumeRequest.getMessageQueue().getTopic(), failed);
             break;
@@ -261,10 +277,10 @@ public class ConsumeMessageConcurrentlyService implements ConsumeMessageService 
                     msgBackFailed.add(msg);
                 }
             }
-
+            //存在mq消费失败的数据
             if (!msgBackFailed.isEmpty()) {
                 consumeRequest.getMsgs().removeAll(msgBackFailed);
-
+                //放入队列重新进行下次消费
                 this.submitConsumeRequestLater(msgBackFailed, consumeRequest.getProcessQueue(),
                     consumeRequest.getMessageQueue());
             }
@@ -298,6 +314,14 @@ public class ConsumeMessageConcurrentlyService implements ConsumeMessageService 
     }
 
 
+    /**
+     *
+     * 功能描述: 在消费消息的一开始会判断消息个数与一次最高允许消费的消息条数，如果小于，
+     * 那直接回封装成ConsumeRequest消费请求丢入线程池中进行消费，而一旦大于，将会按照一次最大批量处理条数进行分次处理。
+     *
+     * @auther: miaomiao
+     * @date: 19/1/23 上午11:40
+     */
     @Override
     public void submitConsumeRequest(//
             final List<MessageExt> msgs, //

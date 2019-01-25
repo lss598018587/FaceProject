@@ -187,6 +187,15 @@ public abstract class RebalanceImpl {
     }
 
 
+    /**
+     *
+     * 功能描述: 在lockAll()方法当中，会遍历所有的BrokerName，从客户端根据brokerName获取相应的地址，
+     * 将消费者组名，相应消费者的客户端id，以及该broker下面的消费者队列作为参数发送给Broker
+     * 通过clientAPIInstance发送给broker获取需要加锁的消费队列作为结果返回。
+     *
+     * @auther: miaomiao
+     * @date: 19/1/22 下午8:32
+     */
     public void lockAll() {
         HashMap<String, Set<MessageQueue>> brokerMqs = this.buildProcessQueueTableByBrokerName();
 

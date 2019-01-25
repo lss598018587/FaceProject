@@ -562,6 +562,9 @@ public class CommitLog {
                 return new PutMessageResult(PutMessageStatus.UNKNOWN_ERROR, result);
             }
 
+            /**
+             *   在将消息存入物理文件之后，需要构造dispatchRequest，以便将消息的位置数据分发给相应的topic下面的ConsumerQueue以便消费者取得
+             */
             DispatchRequest dispatchRequest = new DispatchRequest(//
                 topic,// 1
                 queueId,// 2

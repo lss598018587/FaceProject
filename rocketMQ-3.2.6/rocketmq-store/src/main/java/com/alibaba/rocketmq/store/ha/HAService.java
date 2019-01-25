@@ -374,7 +374,13 @@ public class HAService {
             }
         }
 
-
+        /**
+         *
+         * 功能描述: 通过isTImeToReportOffset()方法来判断当前时间与上一次写时间相隔是否超过所配置的时间间隔
+         *
+         * @auther: miaomiao
+         * @date: 19/1/23 下午2:26
+         */
         private boolean isTimeToReportOffset() {
             long interval =
                     HAService.this.defaultMessageStore.getSystemClock().now() - this.lastWriteTimestamp;
@@ -385,8 +391,21 @@ public class HAService {
             return needHeart;
         }
 
-
+        /**
+         *
+         * 功能描述: 如果超过，则会通过repirtSlaveMaxOffset()方法向master报告当前最大offset并作为心跳数据。
+         *
+         * @auther: miaomiao
+         * @date: 19/1/23 下午2:27
+         */
         private boolean reportSlaveMaxOffset(final long maxOffset) {
+            /**
+             * long是8个字符
+             * position是读写指针
+             * 写入之后，position位置就移到了第8个位置
+             * 这时候要置为0，读的时候才用0开始读
+             * position不会超过limit的值
+             */
             this.reportOffset.position(0);
             this.reportOffset.limit(8);
             this.reportOffset.putLong(maxOffset);
@@ -548,6 +567,14 @@ public class HAService {
         }
 
 
+        /**
+         *
+         * 功能描述: 可以看到，在slave成功与master连上网络连接之后，会取得在本机上消息存储的最大offset，以便后续对master报告自己的存储位置。
+         * 而关于最大offset的取得，则会在MapedFileQueue当中 取得文件逻辑队列最后一个的消费位置返回给haClient。
+         *
+         * @auther: miaomiao
+         * @date: 19/1/23 下午2:23
+         */
         private boolean connectMaster() throws ClosedChannelException {
             if (null == socketChannel) {
                 String addr = this.masterAddress.get();

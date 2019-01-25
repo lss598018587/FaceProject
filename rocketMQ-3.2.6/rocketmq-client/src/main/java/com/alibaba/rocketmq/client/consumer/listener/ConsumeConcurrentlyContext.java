@@ -63,4 +63,5 @@ public class ConsumeConcurrentlyContext {
     public void setAckIndex(int ackIndex) {
         this.ackIndex = ackIndex;
     }
+
 }

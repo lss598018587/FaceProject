@@ -32,6 +32,11 @@ public class TopAddressing {
     }
 
 
+    /**
+     * 去掉换行
+     * @param str
+     * @return
+     */
     private static String clearNewLine(final String str) {
         String newString = str.trim();
         int index = newString.indexOf("\r");

@@ -148,4 +148,11 @@ public class ClientConfig {
                 + heartbeatBrokerInterval + ", persistConsumerOffsetInterval="
                 + persistConsumerOffsetInterval + "]";
     }
+
+    public static void main(String[] args) {
+        System.out.println(UtilAll.getPid());
+        System.out.println(UtilAll.getPid());
+        System.out.println(UtilAll.getPid());
+        System.out.println(UtilAll.getPid());
+    }
 }

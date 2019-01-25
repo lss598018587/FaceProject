@@ -128,6 +128,7 @@ public class HAConnection {
             while (!this.isStoped()) {
                 try {
                     this.selector.select(1000);
+                    //在得到消息之后，会调用processReadEven()方法对slave的offset数据进行处理。
                     boolean ok = this.processReadEvent();
                     if (!ok) {
                         HAConnection.log.error("processReadEvent error");
@@ -260,6 +261,19 @@ public class HAConnection {
         }
 
 
+
+        /**
+         *
+         * 功能描述: 首先会判断该connection所对应的slave是否存有数据，通过判断slave所回报的偏移量可以得出。如果该slave没有数据，
+         * 将会直接从最后一个物理文件的最后一个开始传输数据。否则，将会从上一次master所接受到的偏移量作为开始传输的起点。
+         *
+         * 如果该master长时间没有与该slave发送过消息，将会先发送一次心跳消息。
+         *
+         * 然后通过transferData()方法传输心跳数据。
+         *
+         * @auther: miaomiao
+         * @date: 19/1/23 下午3:11
+         */
         @Override
         public void run() {
             HAConnection.log.info(this.getServiceName() + " service started");

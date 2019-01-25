@@ -383,6 +383,13 @@ public class DefaultMessageStore implements MessageStore {
     }
 
 
+    /**
+     *
+     * 功能描述: 然后将封装得到的消息交由消息存储层，默认defaultMessageStore，调用putMessage()方法
+     *
+     * @auther: miaomiao
+     * @date: 19/1/23 下午3:33
+     */
     public PutMessageResult putMessage(MessageExtBrokerInner msg) {
         if (this.shutdown) {
             log.warn("message store has shutdown, so putMessage is forbidden");
@@ -424,6 +431,9 @@ public class DefaultMessageStore implements MessageStore {
         }
 
         long beginTime = this.getSystemClock().now();
+        /**
+         * 调用commitLog的putMessage()方法来存储消息。
+         */
         PutMessageResult result = this.commitLog.putMessage(msg);
         // 性能数据统计
         long eclipseTime = this.getSystemClock().now() - beginTime;

@@ -86,13 +86,23 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
     private static final long ConsumerTimeoutMillisWhenSuspend = 1000 * 30;
     private final Logger log = ClientLogger.getLog();
     private final DefaultMQPushConsumer defaultMQPushConsumer;
+    /**
+     * 当前的consumer应该从哪些Queue中消费消息
+     */
     private final RebalanceImpl rebalanceImpl = new RebalancePushImpl(this);
     private ServiceState serviceState = ServiceState.CREATE_JUST;
     private MQClientInstance mQClientFactory;
+    /**
+     * 负责从broker处拉取消息，然后利用ConsumeMessageService回调用户的Listener执行消息消费逻辑；
+     */
     private PullAPIWrapper pullAPIWrapper;
     private volatile boolean pause = false;
     private boolean consumeOrderly = false;
     private MessageListener messageListenerInner;
+    /**
+     * 维护当前consumer的消费记录（offset）；有两种实现，Local和Rmote，Local存储在本地磁盘上，
+     * 适用于BROADCASTING广播消费模式；而Remote则将消费进度存储在Broker上，适用于CLUSTERING集群消费模式；
+     */
     private OffsetStore offsetStore;
     private ConsumeMessageService consumeMessageService;
 
@@ -316,6 +326,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
             return;
         }
 
+        //更新pullRequest里的pullQueue的最新更新时间为当前时间
         pullRequest.getProcessQueue().setLastPullTimestamp(System.currentTimeMillis());
 
         try {
@@ -334,6 +345,10 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
             return;
         }
 
+        /**
+         * 对于流量控制消费者状态消息长度等一系列的判断，如果当前发送条件不符合当前消费者配置的，
+         * 将会将其丢入定时任务线程池中在一定的timeDelay之后重新尝试发送。
+         */
         long size = processQueue.getMsgCount().get();
         if (size > this.defaultMQPushConsumer.getPullThresholdForQueue()) {
             this.executePullRequestLater(pullRequest, PullTimeDelayMillsWhenFlowControl);
@@ -392,8 +407,15 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
                             DefaultMQPushConsumerImpl.this.getConsumerStatsManager().incPullTPS(
                                 pullRequest.getConsumerGroup(), pullRequest.getMessageQueue().getTopic(),
                                 pullResult.getMsgFoundList().size());
-
+                            /**
+                             * 把消息放入processQueue，等待消费
+                             */
                             boolean dispathToConsume = processQueue.putMessage(pullResult.getMsgFoundList());
+                            /**
+                             * 在存放消息之后，将是消息的消费。
+                             *
+                             * 调用defaultMQPushConsumerImpl下的ConsumeMessageService的submitConsumeRequest()方法来消费消息。
+                             */
                             DefaultMQPushConsumerImpl.this.consumeMessageService.submitConsumeRequest(//
                                 pullResult.getMsgFoundList(), //
                                 processQueue, //

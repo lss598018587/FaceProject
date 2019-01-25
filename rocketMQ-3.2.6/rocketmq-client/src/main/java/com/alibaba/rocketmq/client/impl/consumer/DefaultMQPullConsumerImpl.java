@@ -269,6 +269,15 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
     }
 
 
+    /**
+     *
+     * 功能描述: 生成了PullResultExt之后，最后回到了DefaultMQPullConsumerImpl的pullSyncImpl()上，
+     * 在获取了DefaultMQClient将从Broker那里得到的返回的结果之后包装生成的PullRequestExt之后，
+     * 调用processPullRequest()方法对拉回来的结果进行处理。
+     *
+     * @auther: miaomiao
+     * @date: 19/1/22 上午11:47
+     */
     private PullResult pullSyncImpl(MessageQueue mq, String subExpression, long offset, int maxNums,
                                     boolean block, long timeout) throws MQClientException, RemotingException, MQBrokerException,
             InterruptedException {
@@ -318,6 +327,11 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
 
         return this.pullAPIWrapper.processPullResult(mq, pullResult, subscriptionData);
     }
+
+    /**
+     *     subscriptionAutomatically()方法来检查传入的消息队列的topic是否有相应的订阅topic数据存在。
+     *     如果不存在，则会尝试重新建立新的topic订阅数据。
+     */
 
 
     private void subscriptionAutomatically(final String topic) {
