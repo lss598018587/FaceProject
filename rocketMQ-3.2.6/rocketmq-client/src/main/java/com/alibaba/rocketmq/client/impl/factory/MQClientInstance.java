@@ -323,7 +323,13 @@ public class MQClientInstance {
         }
     }
 
-
+    /**
+     *
+     * 功能描述: 判断broker地址在不在topic所对应的路由信息里
+     *
+     * @auther: miaomiao
+     * @date: 19/1/26 上午11:19
+     */
     private boolean isBrokerAddrExistInTopicRouteTable(final String addr) {
         Iterator<Entry<String, TopicRouteData>> it = this.topicRouteTable.entrySet().iterator();
         while (it.hasNext()) {
@@ -745,7 +751,13 @@ public class MQClientInstance {
         return mqList;
     }
 
-
+    /**
+     *
+     * 功能描述: 是否需要更新topic信息
+     *
+     * @auther: miaomiao
+     * @date: 19/1/26 上午10:18
+     */
     private boolean isNeedUpdateTopicRouteInfo(final String topic) {
         boolean result = false;
         {
@@ -1240,5 +1252,50 @@ public class MQClientInstance {
 
     public ConsumerStatsManager getConsumerStatsManager() {
         return consumerStatsManager;
+    }
+
+
+    public static void main(String[] args) {
+        ConcurrentHashMap<String/* Broker Name */, HashMap<Long/* brokerId */, String/* address */>> brokerAddrTable =
+                new ConcurrentHashMap<String, HashMap<Long, String>>();
+
+        HashMap<Long/* brokerId */, String/* address */> map = new HashMap<Long, String>();
+        map.put(111L,"192.168.1.1");
+        brokerAddrTable.put("dd",map);
+
+        ConcurrentHashMap<String, HashMap<Long, String>> updatedTable =
+                new ConcurrentHashMap<String, HashMap<Long, String>>();
+
+        Iterator<Entry<String, HashMap<Long, String>>> itBrokerTable =
+                 brokerAddrTable.entrySet().iterator();
+        while (itBrokerTable.hasNext()) {
+            Entry<String, HashMap<Long, String>> entry = itBrokerTable.next();
+            String brokerName = entry.getKey();
+            HashMap<Long, String> oneTable = entry.getValue();
+
+            HashMap<Long, String> cloneAddrTable = new HashMap<Long, String>();
+            cloneAddrTable.putAll(oneTable);
+
+            Iterator<Entry<Long, String>> it = cloneAddrTable.entrySet().iterator();
+            while (it.hasNext()) {
+                Entry<Long, String> ee = it.next();
+                String addr = ee.getValue();
+                if (true) {
+                    it.remove();
+                    System.out.println("the broker addr[{} {}] is offline, remove it"+ brokerName+addr);
+                }
+            }
+
+            if (cloneAddrTable.isEmpty()) {
+                itBrokerTable.remove();
+                System.out.println("the broker[{}] name's host is offline, remove it"+brokerName);
+            } else {
+                updatedTable.put(brokerName, cloneAddrTable);
+            }
+        }
+
+        if (!updatedTable.isEmpty()) {
+            brokerAddrTable.putAll(updatedTable);
+        }
     }
 }
