@@ -250,6 +250,13 @@ public abstract class RebalanceImpl {
     }
 
 
+    /**
+     *
+     * 功能描述: 执行分配消息队列
+     *
+     * @auther: miaomiao
+     * @date: 19/2/12 下午2:06
+     */
     public void doRebalance() {
         Map<String, SubscriptionData> subTable = this.getSubscriptionInner();
         if (subTable != null) {
@@ -264,7 +271,7 @@ public abstract class RebalanceImpl {
                 }
             }
         }
-
+        // 移除未订阅的topic对应的消息队列
         this.truncateMessageQueueNotMyTopic();
     }
 
@@ -307,6 +314,7 @@ public abstract class RebalanceImpl {
                  * 3.接下来就会根据在之前配置的消息队列分配策略，调用分配策略的allocate()方法，完成消息队列的重新分配。
                  */
                 if (mqSet != null && cidAll != null) {
+                    // 排序 消息队列 和 消费者数组。因为各 Consumer 是在本地分配消息队列，排序后才能保证各 Consumer 顺序一致。
                     List<MessageQueue> mqAll = new ArrayList<MessageQueue>();
                     mqAll.addAll(mqSet);
 
@@ -315,6 +323,7 @@ public abstract class RebalanceImpl {
 
                     AllocateMessageQueueStrategy strategy = this.allocateMessageQueueStrategy;
 
+                    // 根据 队列分配策略 分配消息队列
                     List<MessageQueue> allocateResult = null;
                     try {
                         allocateResult = strategy.allocate(//
@@ -334,7 +343,7 @@ public abstract class RebalanceImpl {
                         allocateResultSet.addAll(allocateResult);
                     }
                     /**
-                     * 4.接下来调用updateProcessQueueTableInRebalance()方法来根据重新平衡的而结果来更新处理队列
+                     * 4.接下来调用updateProcessQueueTableInRebalance()方法来根据重新平衡的结果，更新 Topic 对应的消息队列，并返回是否有变更。
                      */
                     boolean changed = this.updateProcessQueueTableInRebalance(topic, allocateResultSet);
                     if (changed) {
@@ -382,12 +391,21 @@ public abstract class RebalanceImpl {
      * 在这里将会生成pullRequest来建立新的对应关系。并通过computePullFromWhere()得到下次拉取数据的位置，
      * 在RebalancePullImpl中具体实现了这一方法，直接返回0，来确认下一次拉取数据的位置。并将新的处理队列与对应的messageQueue放入map保存。
      *
+     * 当负载均衡时，更新 消息处理队列
+     * - 移除 在processQueueTable && 不存在于 mqSet 里的消息队列
+     * - 增加 不在processQueueTable && 存在于mqSet 里的消息队列
+     *
+     * @param topic Topic
+     * @param mqSet 负载均衡结果后的消息队列数组
+     * @return 是否变更
+     *
      * @auther: miaomiao
      * @date: 19/1/21 上午11:47
      */
     private boolean updateProcessQueueTableInRebalance(final String topic, final Set<MessageQueue> mqSet) {
         boolean changed = false;
 
+        // 移除 在processQueueTable && 不存在于 mqSet 里的消息队列
         Iterator<Entry<MessageQueue, ProcessQueue>> it = this.processQueueTable.entrySet().iterator();
         while (it.hasNext()) {
             Entry<MessageQueue, ProcessQueue> next = it.next();
@@ -395,7 +413,7 @@ public abstract class RebalanceImpl {
             ProcessQueue pq = next.getValue();
 
             if (mq.getTopic().equals(topic)) {
-                if (!mqSet.contains(mq)) {
+                if (!mqSet.contains(mq)) {// 不包含的队列
                     pq.setDropped(true);
                     if (this.removeUnnecessaryMessageQueue(mq, pq)) {
                         it.remove();
@@ -403,7 +421,7 @@ public abstract class RebalanceImpl {
                         log.info("doRebalance, {}, remove unnecessary mq, {}", consumerGroup, mq);
                     }
                 }
-                else if (pq.isPullExpired()) {
+                else if (pq.isPullExpired()) {// 队列拉取超时，进行清理
                     switch (this.consumeType()) {
                         case CONSUME_ACTIVELY:
                             break;
@@ -424,7 +442,8 @@ public abstract class RebalanceImpl {
             }
         }
 
-        List<PullRequest> pullRequestList = new ArrayList<PullRequest>();
+        // 增加 不在processQueueTable && 存在于mqSet 里的消息队列。
+        List<PullRequest> pullRequestList = new ArrayList<PullRequest>(); // 拉消息请求数组
         for (MessageQueue mq : mqSet) {
             if (!this.processQueueTable.containsKey(mq)) {
                 PullRequest pullRequest = new PullRequest();
@@ -444,7 +463,7 @@ public abstract class RebalanceImpl {
                 }
             }
         }
-
+        // 发起消息拉取请求
         this.dispatchPullRequest(pullRequestList);
 
         return changed;

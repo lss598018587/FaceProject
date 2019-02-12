@@ -21,6 +21,9 @@ package com.alibaba.rocketmq.common.sysflag;
  * @author shijia.wxr<vintage.wang@gmail.com>
  */
 public class PullSysFlag {
+    /**
+     * 1<<2   2的2次方乘以1   3<<4   2的4次方乘以3
+     */
     private final static int FLAG_COMMIT_OFFSET = 0x1 << 0;
     private final static int FLAG_SUSPEND = 0x1 << 1;
     private final static int FLAG_SUBSCRIPTION = 0x1 << 2;

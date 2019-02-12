@@ -112,6 +112,8 @@ public class BrokerStartup {
             final NettyServerConfig nettyServerConfig = new NettyServerConfig();//netty服务端配置
             final NettyClientConfig nettyClientConfig = new NettyClientConfig();//netty客户端配置
 
+            brokerConfig.setRocketmqHome("/Users/miaomiao/myProject/FaceProject/rocketmq/distribution");
+
             nettyClientConfig.setUseTLS(Boolean.parseBoolean(System.getProperty(TLS_ENABLE,
                 String.valueOf(TlsSystemConfig.tlsMode == TlsMode.ENFORCING))));
             nettyServerConfig.setListenPort(10911);//netty监听端口号

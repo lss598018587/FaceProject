@@ -523,6 +523,7 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
 
                 this.checkConfig();
 
+                //针对于rebalanceImpl ，把topic和topic相应的对象扔进去
                 this.copySubscription();
 
                 if (this.defaultMQPullConsumer.getMessageModel() == MessageModel.CLUSTERING) {

@@ -20,8 +20,10 @@ import java.util.Map;
 import java.util.Set;
 
 import com.alibaba.rocketmq.client.consumer.DefaultMQPullConsumer;
+import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
 import com.alibaba.rocketmq.client.consumer.PullResult;
 import com.alibaba.rocketmq.client.exception.MQClientException;
+import com.alibaba.rocketmq.common.consumer.ConsumeFromWhere;
 import com.alibaba.rocketmq.common.message.MessageQueue;
 
 
@@ -34,10 +36,10 @@ public class PullConsumer {
 
     public static void main(String[] args) throws MQClientException {
         DefaultMQPullConsumer consumer = new DefaultMQPullConsumer("please_rename_unique_group_name_5");
+        consumer.setNamesrvAddr("rocketmq-nameserver1:9876;rocketmq-nameserver2:9876");
 
         consumer.start();
-
-        Set<MessageQueue> mqs = consumer.fetchSubscribeMessageQueues("TopicTest");
+        Set<MessageQueue> mqs = consumer.fetchSubscribeMessageQueues("TopicTest112");
         for (MessageQueue mq : mqs) {
             System.out.println("Consume from the queue: " + mq);
             SINGLE_MQ: while (true) {

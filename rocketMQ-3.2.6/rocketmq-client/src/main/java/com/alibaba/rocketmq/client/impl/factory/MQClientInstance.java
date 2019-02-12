@@ -104,8 +104,12 @@ public class MQClientInstance {
             new ConcurrentHashMap<String, TopicRouteData>();
     private final Lock lockNamesrv = new ReentrantLock();
     private final Lock lockHeartbeat = new ReentrantLock();
+
+    // Broker名字 和 Broker地址相关 Map
     private final ConcurrentHashMap<String/* Broker Name */, HashMap<Long/* brokerId */, String/* address */>> brokerAddrTable =
             new ConcurrentHashMap<String, HashMap<Long, String>>();
+
+
     private final ScheduledExecutorService scheduledExecutorService = Executors
             .newSingleThreadScheduledExecutor(new ThreadFactory() {
                 @Override
@@ -248,6 +252,7 @@ public class MQClientInstance {
         }, 1000, this.clientConfig.getHeartbeatBrokerInterval(), TimeUnit.MILLISECONDS);
 
         //定期持久化各消费者队列消费进度。
+        //针对consumerclient才用
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
             @Override
@@ -363,6 +368,7 @@ public class MQClientInstance {
         if (this.lockHeartbeat.tryLock()) {
             try {
                 this.sendHeartbeatToAllBroker();
+                //此方法只在消费端consumer用，把filter注册上去
                 this.uploadFilterClassSource();
             } catch (final Exception e) {
                 log.error("sendHeartbeatToAllBroker exception", e);
@@ -425,6 +431,7 @@ public class MQClientInstance {
             Entry<String, MQConsumerInner> next = it.next();
             MQConsumerInner consumer = next.getValue();
             if (ConsumeType.CONSUME_PASSIVELY == consumer.consumeType()) {
+                //获取topic的信息列表
                 Set<SubscriptionData> subscriptions = consumer.subscriptions();
                 for (SubscriptionData sub : subscriptions) {
                     if (sub.isClassFilterMode() && sub.getFilterClassSource() != null) {
@@ -1011,21 +1018,31 @@ public class MQClientInstance {
         return null;
     }
 
+    /**
+     * 获得Broker信息
+     *
+     * @param brokerName broker名字
+     * @param brokerId broker编号
+     * @param onlyThisBroker 是否必须是该broker
+     * @return Broker信息
+     */
     public FindBrokerResult findBrokerAddressInSubscribe(//
                                                          final String brokerName,//
                                                          final long brokerId,//
                                                          final boolean onlyThisBroker//
     ) {
-        String brokerAddr = null;
-        boolean slave = false;
-        boolean found = false;
+        String brokerAddr = null;// broker地址
+        boolean slave = false;// 是否为从节点
+        boolean found = false;// 是否找到
 
+        // 获得Broker信息
         HashMap<Long/* brokerId */, String/* address */> map = this.brokerAddrTable.get(brokerName);
         if (map != null && !map.isEmpty()) {
             brokerAddr = map.get(brokerId);
             slave = (brokerId != MixAll.MASTER_ID);
             found = (brokerAddr != null);
 
+            // 如果不强制获得，选择一个Broker
             if (!found && !onlyThisBroker) {
                 Entry<Long, String> entry = map.entrySet().iterator().next();
                 brokerAddr = entry.getValue();
@@ -1033,11 +1050,11 @@ public class MQClientInstance {
                 found = true;
             }
         }
-
+        // 找到broker，则返回信息
         if (found) {
             return new FindBrokerResult(brokerAddr, slave);
         }
-
+        // 找不到，则返回空
         return null;
     }
 
@@ -1256,46 +1273,6 @@ public class MQClientInstance {
 
 
     public static void main(String[] args) {
-        ConcurrentHashMap<String/* Broker Name */, HashMap<Long/* brokerId */, String/* address */>> brokerAddrTable =
-                new ConcurrentHashMap<String, HashMap<Long, String>>();
 
-        HashMap<Long/* brokerId */, String/* address */> map = new HashMap<Long, String>();
-        map.put(111L,"192.168.1.1");
-        brokerAddrTable.put("dd",map);
-
-        ConcurrentHashMap<String, HashMap<Long, String>> updatedTable =
-                new ConcurrentHashMap<String, HashMap<Long, String>>();
-
-        Iterator<Entry<String, HashMap<Long, String>>> itBrokerTable =
-                 brokerAddrTable.entrySet().iterator();
-        while (itBrokerTable.hasNext()) {
-            Entry<String, HashMap<Long, String>> entry = itBrokerTable.next();
-            String brokerName = entry.getKey();
-            HashMap<Long, String> oneTable = entry.getValue();
-
-            HashMap<Long, String> cloneAddrTable = new HashMap<Long, String>();
-            cloneAddrTable.putAll(oneTable);
-
-            Iterator<Entry<Long, String>> it = cloneAddrTable.entrySet().iterator();
-            while (it.hasNext()) {
-                Entry<Long, String> ee = it.next();
-                String addr = ee.getValue();
-                if (true) {
-                    it.remove();
-                    System.out.println("the broker addr[{} {}] is offline, remove it"+ brokerName+addr);
-                }
-            }
-
-            if (cloneAddrTable.isEmpty()) {
-                itBrokerTable.remove();
-                System.out.println("the broker[{}] name's host is offline, remove it"+brokerName);
-            } else {
-                updatedTable.put(brokerName, cloneAddrTable);
-            }
-        }
-
-        if (!updatedTable.isEmpty()) {
-            brokerAddrTable.putAll(updatedTable);
-        }
     }
 }

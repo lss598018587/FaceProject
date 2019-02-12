@@ -80,6 +80,7 @@ public class NamesrvStartup {
         }
         //初始化配置文件
         final NamesrvConfig namesrvConfig = new NamesrvConfig();
+        namesrvConfig.setRocketmqHome("/Users/miaomiao/myProject/FaceProject/rocketmq/distribution");
         final NettyServerConfig nettyServerConfig = new NettyServerConfig();//netty服务端配置
         nettyServerConfig.setListenPort(9876);//netty服务端监听端口9876
         if (commandLine.hasOption('c')) {

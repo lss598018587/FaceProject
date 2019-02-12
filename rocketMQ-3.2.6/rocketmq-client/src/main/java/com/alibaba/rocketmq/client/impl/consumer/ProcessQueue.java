@@ -46,8 +46,15 @@ public class ProcessQueue {
         "rocketmq.client.rebalance.lockInterval", "20000"));
 
     private final Logger log = ClientLogger.getLog();
+    /**
+     * 消息映射读写锁
+     */
     private final ReadWriteLock lockTreeMap = new ReentrantReadWriteLock();
     // 用来保存拉取到的消息
+    /**
+     * 消息映射
+     * key：消息队列位置
+     */
     private final TreeMap<Long, MessageExt> msgTreeMap = new TreeMap<Long, MessageExt>();
     // ProcessQueue中保存的消息里的最大offset，为ConsumeQueue的offset
     private volatile long queueOffsetMax = 0L;
@@ -74,6 +81,12 @@ public class ProcessQueue {
     // 记录了废弃ProcessQueue的时候lockConsume的次数
     private final AtomicLong tryUnlockTimes = new AtomicLong(0);
     // 该参数为调整线程池的时候提供了数据参考
+    /**
+     * Broker累计消息数量
+     * 计算公式 = queueMaxOffset - 新添加消息数组[n - 1].queueOffset
+     * Acc = Accumulation
+     * cnt = （猜测）对比度
+     */
     private volatile long msgAccCnt = 0;
 
 
@@ -100,6 +113,7 @@ public class ProcessQueue {
      * @date: 19/1/21 下午2:00
      */
     public boolean isPullExpired() {
+        //当前时间 - 最后一次拉取消息时间 > 120s ( 120s 可配置)
         boolean result = (System.currentTimeMillis() - this.lastPullTimestamp) > PullMaxIdleTime;
         return result;
     }
@@ -108,14 +122,19 @@ public class ProcessQueue {
      *
      * 功能描述: 取回来的消息将会在proceeQueue当中存放在其中的treeMap中（整个操作为了保证线程安全，全程加锁），并且在之后统计消费的数量统计。
      *
-     * @auther: miaomiao
-     * @date: 19/1/23 上午10:58
+     * 添加消息，并返回是否提交给消费者
+     * 返回true，当有新消息添加成功时，
+     *
+     * @param msgs 消息
+     * @return 是否提交给消费者
      */
+
     public boolean putMessage(final List<MessageExt> msgs) {
         boolean dispatchToConsume = false;
         try {
             this.lockTreeMap.writeLock().lockInterruptibly();
             try {
+                // 添加消息
                 int validMsgCnt = 0;
                 for (MessageExt msg : msgs) {
                     MessageExt old = msgTreeMap.put(msg.getQueueOffset(), msg);
@@ -126,11 +145,13 @@ public class ProcessQueue {
                 }
                 msgCount.addAndGet(validMsgCnt);
 
+                // 计算是否正在消费
                 if (!msgTreeMap.isEmpty() && !this.consuming) {
                     dispatchToConsume = true;
                     this.consuming = true;
                 }
 
+                // Broker累计消息数量
                 if (!msgs.isEmpty()) {
                     MessageExt messageExt = msgs.get(msgs.size() - 1);
                     String property = messageExt.getProperty(MessageConst.PROPERTY_MAX_OFFSET);
