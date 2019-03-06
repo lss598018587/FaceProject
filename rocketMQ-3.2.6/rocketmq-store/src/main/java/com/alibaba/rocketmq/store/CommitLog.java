@@ -497,6 +497,7 @@ public class CommitLog {
         int queueId = msg.getQueueId();
         long tagsCode = msg.getTagsCode();
 
+        // 事务相关
         final int tranType = MessageSysFlag.getTransactionValue(msg.getSysFlag());
         if (tranType == MessageSysFlag.TransactionNotType//
                 || tranType == MessageSysFlag.TransactionCommitType) {
@@ -539,11 +540,12 @@ public class CommitLog {
                         + msg.getBornHostString());
                 return new PutMessageResult(PutMessageStatus.CREATE_MAPEDFILE_FAILED, null);
             }
+            // 存储消息
             result = mapedFile.appendMessage(msg, this.appendMessageCallback);
             switch (result.getStatus()) {
             case PUT_OK:
                 break;
-            case END_OF_FILE:
+            case END_OF_FILE:  // 当文件尾时，获取新的映射文件，并进行插入
                 // Create a new file, re-write the message
                 mapedFile = this.mapedFileQueue.getLastMapedFile();
                 if (null == mapedFile) {

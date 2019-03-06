@@ -22,20 +22,35 @@ package com.alibaba.rocketmq.common.sysflag;
  * @since: 14-5-28
  */
 public class TopicSysFlag {
-    // 单元化逻辑 topic 标识
+    /**
+     * 单元化逻辑 topic 标识
+     *   2的 0 次方乘以 1  =  1
+     */
     private final static int FLAG_UNIT = 0x1 << 0;
-    // 该 topic 有单元化订阅组
+    /**
+     * 该 topic 有单元化订阅组
+     *  2的 1 次方乘以 1  = 2
+     */
     private final static int FLAG_UNIT_SUB = 0x1 << 1;
 
 
+    /**
+     * unit false  hasUnitSub true 返回2
+     * unit true  hasUnitSub false 返回1
+     * @param unit
+     * @param hasUnitSub
+     * @return
+     */
     public static int buildSysFlag(final boolean unit, final boolean hasUnitSub) {
         int sysFlag = 0;
 
         if (unit) {
+            // 1 | 0 = 1
             sysFlag |= FLAG_UNIT;
         }
 
         if (hasUnitSub) {
+            // 0 | 2 = 2
             sysFlag |= FLAG_UNIT_SUB;
         }
 
@@ -74,7 +89,7 @@ public class TopicSysFlag {
 
 
     public static void main(String[] args) {
-        System.out.println(0x1 << 0);
-        System.out.println(0x1 << 1);
+        System.out.println(1 | 0);
+        System.out.println(2 | 0);
     }
 }

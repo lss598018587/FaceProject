@@ -32,6 +32,9 @@ public class TopicConfig {
     private String topicName;
     private int readQueueNums = DefaultReadQueueNums;
     private int writeQueueNums = DefaultWriteQueueNums;
+    /**
+     * perm = 6
+     */
     private int perm = PermName.PERM_READ | PermName.PERM_WRITE;
     private TopicFilterType topicFilterType = TopicFilterType.SINGLE_TAG;
     private int topicSysFlag = 0;

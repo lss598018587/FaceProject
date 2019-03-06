@@ -200,9 +200,11 @@ public abstract class AbstractSendMessageProcessor implements NettyRequestProces
             int topicSysFlag = 0;
             if (requestHeader.isUnitMode()) {
                 if (requestHeader.getTopic().startsWith(MixAll.RETRY_GROUP_TOPIC_PREFIX)) {
+                    // topicSysFlag =2;
                     topicSysFlag = TopicSysFlag.buildSysFlag(false, true);
                 }
                 else {
+                    // topicSysFlag = 1;
                     topicSysFlag = TopicSysFlag.buildSysFlag(true, false);
                 }
             }

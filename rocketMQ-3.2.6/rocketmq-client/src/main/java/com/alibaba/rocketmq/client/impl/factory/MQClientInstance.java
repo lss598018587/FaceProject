@@ -354,6 +354,7 @@ public class MQClientInstance {
     }
 
 
+
     private void persistAllConsumerOffset() {
         Iterator<Entry<String, MQConsumerInner>> it = this.consumerTable.entrySet().iterator();
         while (it.hasNext()) {

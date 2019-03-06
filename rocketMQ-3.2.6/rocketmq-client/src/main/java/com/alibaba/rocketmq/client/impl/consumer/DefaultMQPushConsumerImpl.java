@@ -634,6 +634,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
     public void sendMessageBack(MessageExt msg, int delayLevel, final String brokerName)
             throws RemotingException, MQBrokerException, InterruptedException, MQClientException {
         try {
+            // Consumer发回消息
             String brokerAddr =
                     (null != brokerName) ? this.mQClientFactory.findBrokerAddressInPublish(brokerName)
                             : RemotingHelper.parseSocketAddressAddr(msg.getStoreHost());
@@ -642,6 +643,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
                 this.defaultMQPushConsumer.getConsumerGroup(), delayLevel, 5000);
         }
         catch (Exception e) {
+            // 异常时，使用Client内置Producer发回消息
             log.error("sendMessageBack Exception, " + this.defaultMQPushConsumer.getConsumerGroup(), e);
 
             Message newMsg =
