@@ -120,6 +120,15 @@ public class MapedFile extends ReferenceResource {
     }
 
 
+    /**
+     *
+     * MappedByteBuffer的确快，但也存在一些问题，主要就是内存占用和文件关闭等不确定问题
+     * 被MappedByteBuffer打开的文件只有在垃圾收集时才会被关闭
+     * @param target
+     * @param methodName
+     * @param args
+     * @return
+     */
     private static Object invoke(final Object target, final String methodName, final Class<?>... args) {
         return AccessController.doPrivileged(new PrivilegedAction<Object>() {
             public Object run() {
@@ -274,6 +283,7 @@ public class MapedFile extends ReferenceResource {
         if (this.isAbleToFlush(flushLeastPages)) {
             //类似于一个智能指针，控制刷盘线程数
             if (this.hold()) {
+                //当前写到什么位置
                 int value = this.wrotePostion.get();
                 //刷盘，内存到硬盘
                 this.mappedByteBuffer.force();
@@ -304,6 +314,7 @@ public class MapedFile extends ReferenceResource {
     private boolean isAbleToFlush(final int flushLeastPages) {
         //已经刷到的位置
         int flush = this.committedPosition.get();
+        //当前写到什么位置
         int write = this.wrotePostion.get();
 
         // 如果当前文件已经写满，应该立刻刷盘
@@ -468,5 +479,18 @@ public class MapedFile extends ReferenceResource {
 
     public void setFirstCreateInQueue(boolean firstCreateInQueue) {
         this.firstCreateInQueue = firstCreateInQueue;
+    }
+
+
+    public static void main(String[] args) throws IOException {
+        String fileName = "/Users/miaomiao/sshpass/mm.txt";
+//        File f = new File("/Users/miaomiao/sshpass/mm.txt");
+//        if (!f.exists()) {
+//            boolean result = f.mkdirs();
+//            log.info(dirName + " mkdir " + (result ? "OK" : "Failed"));
+//        }
+        File file = new File(fileName);
+        FileChannel fileChannel = new RandomAccessFile( file, "rw").getChannel();
+        MappedByteBuffer mappedByteBuffer =  fileChannel.map(MapMode.READ_WRITE, 0, 1024);
     }
 }

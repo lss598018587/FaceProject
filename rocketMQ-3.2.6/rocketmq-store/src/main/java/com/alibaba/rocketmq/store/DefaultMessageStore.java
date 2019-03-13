@@ -106,8 +106,7 @@ public class DefaultMessageStore implements MessageStore {
     // 权限控制后，打印间隔次数
     private AtomicLong printTimes = new AtomicLong(0);
     // 存储层的定时线程
-    private final ScheduledExecutorService scheduledExecutorService = Executors
-        .newSingleThreadScheduledExecutor(new ThreadFactoryImpl("StoreScheduledThread"));
+    private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryImpl("StoreScheduledThread"));
     private final BrokerStatsManager brokerStatsManager;
 
 

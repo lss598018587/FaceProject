@@ -120,7 +120,7 @@ public class MessageStoreConfig {
     @ImportantField
     private BrokerRole brokerRole = BrokerRole.ASYNC_MASTER;
     @ImportantField
-    private FlushDiskType flushDiskType = FlushDiskType.ASYNC_FLUSH;
+    private FlushDiskType flushDiskType = FlushDiskType.SYNC_FLUSH;
     // 同步刷盘超时时间
     private int syncFlushTimeout = 1000 * 5;
     // 定时消息相关

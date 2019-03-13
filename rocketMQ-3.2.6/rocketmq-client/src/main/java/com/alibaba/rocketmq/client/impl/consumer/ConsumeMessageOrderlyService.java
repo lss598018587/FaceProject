@@ -155,7 +155,13 @@ public class ConsumeMessageOrderlyService implements ConsumeMessageService {
     }
 
     class ConsumeRequest implements Runnable {
+        /**
+         * 消息处理队列
+         */
         private final ProcessQueue processQueue;
+        /**
+         * 消息队列
+         */
         private final MessageQueue messageQueue;
 
 
@@ -172,20 +178,21 @@ public class ConsumeMessageOrderlyService implements ConsumeMessageService {
                     this.messageQueue);
                 return;
             }
-
+            // 获得 Consumer 消息队列锁
             final Object objLock = messageQueueLock.fetchLockObject(this.messageQueue);
             synchronized (objLock) {
-                if (MessageModel.BROADCASTING
-                    .equals(ConsumeMessageOrderlyService.this.defaultMQPushConsumerImpl.messageModel())
+                // (广播模式) 或者 (集群模式 && Broker消息队列锁有效)
+                if (MessageModel.BROADCASTING.equals(ConsumeMessageOrderlyService.this.defaultMQPushConsumerImpl.messageModel())
                         || (this.processQueue.isLocked() && !this.processQueue.isLockExpired())) {
                     final long beginTime = System.currentTimeMillis();
+                    // 循环
                     for (boolean continueConsume = true; continueConsume;) {
                         if (this.processQueue.isDropped()) {
                             log.warn("the message queue not be able to consume, because it's dropped. {}",
                                 this.messageQueue);
                             break;
                         }
-
+                        // 消息队列分布式锁未锁定，提交延迟获得锁并消费请求
                         if (MessageModel.CLUSTERING
                             .equals(ConsumeMessageOrderlyService.this.defaultMQPushConsumerImpl
                                 .messageModel())
@@ -195,7 +202,7 @@ public class ConsumeMessageOrderlyService implements ConsumeMessageService {
                                 this.processQueue, 10);
                             break;
                         }
-
+                        // 消息队列分布式锁已经过期，提交延迟获得锁并消费请求
                         if (MessageModel.CLUSTERING
                             .equals(ConsumeMessageOrderlyService.this.defaultMQPushConsumerImpl
                                 .messageModel())
@@ -206,14 +213,14 @@ public class ConsumeMessageOrderlyService implements ConsumeMessageService {
                                 this.processQueue, 10);
                             break;
                         }
-
+                        // 当前周期消费时间超过连续时长，默认：60s，提交延迟消费请求。默认情况下，每消费1分钟休息10ms。
                         long interval = System.currentTimeMillis() - beginTime;
                         if (interval > MaxTimeConsumeContinuously) {
                             ConsumeMessageOrderlyService.this.submitConsumeRequestLater(processQueue,
                                 messageQueue, 10);
                             break;
                         }
-
+                        // 获取消费消息。此处和并发消息请求不同，并发消息请求已经带了消费哪些消息。
                         final int consumeBatchSize =
                                 ConsumeMessageOrderlyService.this.defaultMQPushConsumer
                                     .getConsumeMessageBatchMaxSize();
@@ -237,10 +244,11 @@ public class ConsumeMessageOrderlyService implements ConsumeMessageService {
                                 ConsumeMessageOrderlyService.this.defaultMQPushConsumerImpl
                                     .executeHookBefore(consumeMessageContext);
                             }
-
+                            // 执行消费
                             long beginTimestamp = System.currentTimeMillis();
 
                             try {
+                                // 锁定队列消费锁
                                 this.processQueue.getLockConsume().lock();
                                 if (this.processQueue.isDropped()) {
                                     log.warn(
@@ -261,6 +269,7 @@ public class ConsumeMessageOrderlyService implements ConsumeMessageService {
                                     messageQueue);
                             }
                             finally {
+                                // 锁定队列消费锁
                                 this.processQueue.getLockConsume().unlock();
                             }
 
@@ -290,7 +299,7 @@ public class ConsumeMessageOrderlyService implements ConsumeMessageService {
                             ConsumeMessageOrderlyService.this.getConsumerStatsManager().incConsumeRT(
                                 ConsumeMessageOrderlyService.this.consumerGroup, messageQueue.getTopic(),
                                 consumeRT);
-
+                            // 处理消费结果
                             continueConsume =
                                     ConsumeMessageOrderlyService.this.processConsumeResult(msgs, status,
                                         context, this);
@@ -325,12 +334,24 @@ public class ConsumeMessageOrderlyService implements ConsumeMessageService {
     }
 
 
+    /**
+     * 描述：  处理消费结果，并返回是否继续消费
+     *
+     * @author: miaomiao
+     * @date: 19/3/13 下午4:46
+     * @param msgs  消息
+     * @param status  消费结果状态
+     * @param context  消费Context
+     * @param consumeRequest  是否继续消费
+     * @return 是否继续消费
+     */
     public boolean processConsumeResult(//
             final List<MessageExt> msgs, //
             final ConsumeOrderlyStatus status, //
             final ConsumeOrderlyContext context, //
             final ConsumeRequest consumeRequest//
     ) {
+
         boolean continueConsume = true;
         long commitOffset = -1L;
         if (context.isAutoCommit()) {
@@ -341,18 +362,22 @@ public class ConsumeMessageOrderlyService implements ConsumeMessageService {
                     "the message queue consume result is illegal, we think you want to ack these message {}",
                     consumeRequest.getMessageQueue());
             case SUCCESS:
+                // 提交消息已消费成功到消息处理队列
                 commitOffset = consumeRequest.getProcessQueue().commit();
+                // 统计
                 this.getConsumerStatsManager().incConsumeOKTPS(consumerGroup,
                     consumeRequest.getMessageQueue().getTopic(), msgs.size());
                 break;
             case SUSPEND_CURRENT_QUEUE_A_MOMENT:
+                // 设置消息重新消费
                 consumeRequest.getProcessQueue().makeMessageToCosumeAgain(msgs);
-                this.submitConsumeRequestLater(//
-                    consumeRequest.getProcessQueue(), //
-                    consumeRequest.getMessageQueue(), //
+                // 提交延迟消费请求
+                this.submitConsumeRequestLater(
+                    consumeRequest.getProcessQueue(),
+                    consumeRequest.getMessageQueue(),
                     context.getSuspendCurrentQueueTimeMillis());
                 continueConsume = false;
-
+                // 统计
                 this.getConsumerStatsManager().incConsumeFailedTPS(consumerGroup,
                     consumeRequest.getMessageQueue().getTopic(), msgs.size());
                 break;
@@ -367,21 +392,25 @@ public class ConsumeMessageOrderlyService implements ConsumeMessageService {
                     consumeRequest.getMessageQueue().getTopic(), msgs.size());
                 break;
             case COMMIT:
+                // 提交消息已消费成功到消息处理队列
                 commitOffset = consumeRequest.getProcessQueue().commit();
                 break;
             case ROLLBACK:
+                // 设置消息重新消费
                 consumeRequest.getProcessQueue().rollback();
-                this.submitConsumeRequestLater(//
-                    consumeRequest.getProcessQueue(), //
-                    consumeRequest.getMessageQueue(), //
+                this.submitConsumeRequestLater(
+                    consumeRequest.getProcessQueue(),
+                    consumeRequest.getMessageQueue(),
                     context.getSuspendCurrentQueueTimeMillis());
                 continueConsume = false;
                 break;
-            case SUSPEND_CURRENT_QUEUE_A_MOMENT:
+            case SUSPEND_CURRENT_QUEUE_A_MOMENT:  // 计算是否暂时挂起（暂停）消费N毫秒，默认：10ms
+                // 设置消息重新消费
                 consumeRequest.getProcessQueue().makeMessageToCosumeAgain(msgs);
-                this.submitConsumeRequestLater(//
-                    consumeRequest.getProcessQueue(), //
-                    consumeRequest.getMessageQueue(), //
+                // 提交延迟消费请求
+                this.submitConsumeRequestLater(
+                    consumeRequest.getProcessQueue(),
+                    consumeRequest.getMessageQueue(),
                     context.getSuspendCurrentQueueTimeMillis());
                 continueConsume = false;
                 this.getConsumerStatsManager().incConsumeFailedTPS(consumerGroup,
@@ -392,6 +421,7 @@ public class ConsumeMessageOrderlyService implements ConsumeMessageService {
             }
         }
 
+        // 消息处理队列未dropped，提交有效消费进度
         if (commitOffset >= 0) {
             this.defaultMQPushConsumerImpl.getOffsetStore().updateOffset(consumeRequest.getMessageQueue(),
                 commitOffset, false);

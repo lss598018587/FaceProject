@@ -499,8 +499,7 @@ public class CommitLog {
 
         // 事务相关
         final int tranType = MessageSysFlag.getTransactionValue(msg.getSysFlag());
-        if (tranType == MessageSysFlag.TransactionNotType//
-                || tranType == MessageSysFlag.TransactionCommitType) {
+        if (tranType == MessageSysFlag.TransactionNotType || tranType == MessageSysFlag.TransactionCommitType) {
             // Delay Delivery
             if (msg.getDelayTimeLevel() > 0) {
                 if (msg.getDelayTimeLevel() > this.defaultMessageStore.getScheduleMessageService()
@@ -739,9 +738,11 @@ public class CommitLog {
             CommitLog.log.info(this.getServiceName() + " service started");
 
             while (!this.isStoped()) {
+                // 是否定时方式刷盘，默认是实时刷盘
                 boolean flushCommitLogTimed =
                         CommitLog.this.defaultMessageStore.getMessageStoreConfig().isFlushCommitLogTimed();
 
+                //CommitLog刷盘间隔时间（单位毫秒）
                 int interval =
                         CommitLog.this.defaultMessageStore.getMessageStoreConfig()
                             .getFlushIntervalCommitLog();
@@ -750,6 +751,7 @@ public class CommitLog {
                         CommitLog.this.defaultMessageStore.getMessageStoreConfig()
                             .getFlushCommitLogLeastPages();
 
+                //刷CommitLog，彻底刷盘间隔时间
                 int flushPhysicQueueThoroughInterval =
                         CommitLog.this.defaultMessageStore.getMessageStoreConfig()
                             .getFlushCommitLogThoroughInterval();
@@ -984,7 +986,10 @@ public class CommitLog {
         private final ByteBuffer msgIdMemory;
         // Store the message content
         private final ByteBuffer msgStoreItemMemory;
-        // The maximum length of the message
+        /**
+         * The maximum length of the message
+         * 消息的最大长度
+         */
         private final int maxMessageSize;
 
 
@@ -1000,17 +1005,31 @@ public class CommitLog {
         }
 
 
+
+
+        /**
+         *
+         * @author: miaomiao
+         * @Description:
+         * @date: 19/3/13 上午11:47
+         * @param fileFromOffset  文件起始偏移量
+         * @param byteBuffer 写入文件的流，后台一个线程会force到文件里
+         * @param maxBlank   fileSize - currentPos(当前写入的offset)   剩余空间
+         * @param msg
+         * @return com.alibaba.rocketmq.store.AppendMessageResult
+         */
         public AppendMessageResult doAppend(final long fileFromOffset, final ByteBuffer byteBuffer,
                 final int maxBlank, final Object msg) {
+
             // STORETIMESTAMP + STOREHOSTADDRESS + OFFSET <br>
             MessageExtBrokerInner msgInner = (MessageExtBrokerInner) msg;
-            // PHY OFFSET
+            // 计算commitLog里的msgId
             long wroteOffset = fileFromOffset + byteBuffer.position();
             String msgId =
                     MessageDecoder.createMessageId(this.msgIdMemory, msgInner.getStoreHostBytes(),
                         wroteOffset);
 
-            // Record ConsumeQueue information
+            // 计算commitLog里的msgId
             String key = msgInner.getTopic() + "-" + msgInner.getQueueId();
             Long queueOffset = CommitLog.this.topicQueueTable.get(key);
             if (null == queueOffset) {
@@ -1064,14 +1083,14 @@ public class CommitLog {
                     + 2 + propertiesLength // 16 propertiesLength
                     + 0;
 
-            // Exceeds the maximum message
+            //超过最长的消息长度
             if (msgLen > this.maxMessageSize) {
                 CommitLog.log.warn("message size exceeded, msg total size: " + msgLen + ", msg body size: "
                         + bodyLength + ", maxMessageSize: " + this.maxMessageSize);
                 return new AppendMessageResult(AppendMessageStatus.MESSAGE_SIZE_EXCEEDED);
             }
 
-            // Determines whether there is sufficient free space
+            //确定是否有足够的可用空间
             if ((msgLen + END_FILE_MIN_BLANK_LENGTH) > maxBlank) {
                 this.resetMsgStoreItemMemory(maxBlank);
                 // 1 TOTALSIZE
@@ -1142,7 +1161,7 @@ public class CommitLog {
                 break;
             case MessageSysFlag.TransactionNotType:
             case MessageSysFlag.TransactionCommitType:
-                // The next update ConsumeQueue information
+                // The next update ConsumeQueue information 更新队列的offset
                 CommitLog.this.topicQueueTable.put(key, ++queueOffset);
                 break;
             default:
@@ -1169,4 +1188,19 @@ public class CommitLog {
         log.info("removeQueurFromTopicQueueTable OK Topic: {} QueueId: {}", topic, queueId);
     }
 
+
+    public static void main(String[] args) {
+        ByteBuffer byteBuffer  = ByteBuffer.allocate(32);
+        long int4 = 14L;
+        byteBuffer.putLong(int4);
+//        System.out.println("position:"+byteBuffer.position());
+//        System.out.println("limit:"+byteBuffer.limit());
+//        System.out.println("capacity:"+byteBuffer.capacity());
+//        //这里为什么从第三个字节开始读取，因为前面一个字节和一个字符总共三个字节
+        byteBuffer.flip();
+
+        System.out.println("======get int:"+byteBuffer.getLong());
+//        byteBuffer.put("kaixin".getBytes());
+//        System.out.println(new String(byteBuffer.array()));
+    }
 }

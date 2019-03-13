@@ -76,7 +76,9 @@ public class ProcessQueue {
     private volatile long lastLockTimestamp = System.currentTimeMillis();
     // 是否正在消息
     private volatile boolean consuming = false;
-    // 顺序消费的时候使用
+    /**
+     * 消息映射临时存储（消费中的消息）
+     */
     private final TreeMap<Long, MessageExt> msgTreeMapTemp = new TreeMap<Long, MessageExt>();
     // 记录了废弃ProcessQueue的时候lockConsume的次数
     private final AtomicLong tryUnlockTimes = new AtomicLong(0);
@@ -261,6 +263,10 @@ public class ProcessQueue {
     }
 
 
+    /**
+     *  回滚消费中的消息
+     *  逻辑类似于{@link #makeMessageToCosumeAgain(List)}
+     */
     public void rollback() {
         try {
             this.lockTreeMap.writeLock().lockInterruptibly();
@@ -278,13 +284,20 @@ public class ProcessQueue {
     }
 
 
+    /**
+     * 提交消费中的消息已消费成功，返回消费进度
+     *
+     * @return 消费进度
+     */
     public long commit() {
         try {
             this.lockTreeMap.writeLock().lockInterruptibly();
             try {
+                // 消费进度
                 Long offset = this.msgTreeMapTemp.lastKey();
                 msgCount.addAndGet(this.msgTreeMapTemp.size() * (-1));
                 this.msgTreeMapTemp.clear();
+                // 返回消费进度
                 if (offset != null) {
                     return offset + 1;
                 }
@@ -301,6 +314,12 @@ public class ProcessQueue {
     }
 
 
+    /**
+     * 指定消息重新消费
+     * 逻辑类似于{@link #rollback()}
+     *
+     * @param msgs 消息
+     */
     public void makeMessageToCosumeAgain(List<MessageExt> msgs) {
         try {
             this.lockTreeMap.writeLock().lockInterruptibly();
@@ -319,6 +338,14 @@ public class ProcessQueue {
         }
     }
 
+    /**
+     * 描述：获得持有消息前N条
+     * 
+     * @author: miaomiao
+     * @date: 19/3/13 下午5:00
+     * @param  batchSize 条数
+     * @return  消息
+     */
     public List<MessageExt> takeMessags(final int batchSize) {
         List<MessageExt> result = new ArrayList<MessageExt>(batchSize);
         final long now = System.currentTimeMillis();

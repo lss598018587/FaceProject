@@ -20,18 +20,34 @@ package com.alibaba.rocketmq.common.sysflag;
  */
 public class MessageSysFlag {
     /**
-     * SysFlag
+     * SysFlag 1
      */
     public final static int CompressedFlag = (0x1 << 0);
+    /**
+     * SysFlag 2
+     */
     public final static int MultiTagsFlag = (0x1 << 1);
 
     /**
      * 7 6 5 4 3 2 1 0<br>
      * SysFlag 事务相关，从左属，2与3
      */
+
+    /**
+     * 0
+     */
     public final static int TransactionNotType = (0x0 << 2);
+    /**
+     * 4
+     */
     public final static int TransactionPreparedType = (0x1 << 2);
+    /**
+     * 8
+     */
     public final static int TransactionCommitType = (0x2 << 2);
+    /**
+     * 12
+     */
     public final static int TransactionRollbackType = (0x3 << 2);
 
 
@@ -47,5 +63,12 @@ public class MessageSysFlag {
 
     public static int clearCompressedFlag(final int flag) {
         return flag & (~CompressedFlag);
+    }
+
+    public static void main(String[] args) {
+        System.out.println(TransactionNotType);
+        System.out.println(TransactionPreparedType);
+        System.out.println(TransactionCommitType);
+        System.out.println(TransactionRollbackType);
     }
 }

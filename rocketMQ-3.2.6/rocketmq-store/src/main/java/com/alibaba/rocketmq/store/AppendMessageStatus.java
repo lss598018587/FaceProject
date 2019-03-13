@@ -24,6 +24,9 @@ package com.alibaba.rocketmq.store;
 public enum AppendMessageStatus {
     PUT_OK,
     END_OF_FILE,
+    /**
+     * 消息长度过长
+     */
     MESSAGE_SIZE_EXCEEDED,
     UNKNOWN_ERROR,
 }

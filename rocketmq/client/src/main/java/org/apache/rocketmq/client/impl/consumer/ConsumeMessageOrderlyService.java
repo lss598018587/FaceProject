@@ -82,6 +82,12 @@ public class ConsumeMessageOrderlyService implements ConsumeMessageService {
         this.scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryImpl("ConsumeMessageScheduledThread_"));
     }
 
+    /**
+     *
+     * @author: miaomiao
+     * @Description: Broker 消息队列锁会过期，默认配置 30s。因此，Consumer 需要不断向 Broker 刷新该锁过期时间，默认配置 20s 刷新一次。
+     * @date: 19/3/13 下午4:26
+     */
     public void start() {
         if (MessageModel.CLUSTERING.equals(ConsumeMessageOrderlyService.this.defaultMQPushConsumerImpl.messageModel())) {
             this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
@@ -338,8 +344,17 @@ public class ConsumeMessageOrderlyService implements ConsumeMessageService {
             return this.defaultMQPushConsumer.getMaxReconsumeTimes();
         }
     }
-
+    /**
+     * 描述：计算是否要暂停消费
+     * 不暂停条件：存在消息都超过最大消费次数并且都发回broker成功
+     *
+     * @author: miaomiao
+     * @date: 19/3/13 下午4:52
+     * @param msgs  消息
+     * @return 是否要暂停
+     */
     private boolean checkReconsumeTimes(List<MessageExt> msgs) {
+
         boolean suspend = false;
         if (msgs != null && !msgs.isEmpty()) {
             for (MessageExt msg : msgs) {
@@ -357,8 +372,17 @@ public class ConsumeMessageOrderlyService implements ConsumeMessageService {
         }
         return suspend;
     }
-
+    /**
+     * 描述：发回消息。
+     * 消息发回broker后，对应的消息队列是死信队列。
+     *
+     * @author: miaomiao
+     * @date: 19/3/13 下午4:53
+     * @param msg 消息
+     * @return 是否发送成功
+     */
     public boolean sendMessageBack(final MessageExt msg) {
+
         try {
             // max reconsume times exceeded then send to dead letter queue.
             Message newMsg = new Message(MixAll.getRetryTopic(this.defaultMQPushConsumer.getConsumerGroup()), msg.getBody());

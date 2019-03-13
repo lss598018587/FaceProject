@@ -24,13 +24,25 @@ package com.alibaba.rocketmq.store;
 public class RunningFlags {
     // 禁止读权限
     private static final int NotReadableBit = 1;
-    // 禁止写权限
+    /**
+     * 禁止写权限
+     * 2的1次方乘以1  2
+     */
     private static final int NotWriteableBit = 1 << 1;
-    // 逻辑队列是否发生错误
+    /**
+     * 逻辑队列是否发生错误
+     * 2的2吃方乘以1   4
+     */
     private static final int WriteLogicsQueueErrorBit = 1 << 2;
-    // 索引文件是否发生错误
+    /**
+     * 索引文件是否发生错误
+     * 2的3次方乘以1   8
+     */
     private static final int WriteIndexFileErrorBit = 1 << 3;
-    // 磁盘空间不足
+    /**
+     * 磁盘空间不足
+     * 2的4次方乘以1  16
+     */
     private static final int DiskFullBit = 1 << 4;
     private volatile int flagBits = 0;
 
@@ -81,6 +93,9 @@ public class RunningFlags {
 
 
     public boolean isWriteable() {
+//        if((this.flagBits & 30)==0){
+//            return true;
+//        }
         if ((this.flagBits & (NotWriteableBit | WriteLogicsQueueErrorBit | DiskFullBit | WriteIndexFileErrorBit)) == 0) {
             return true;
         }
@@ -143,5 +158,10 @@ public class RunningFlags {
         boolean result = !((this.flagBits & DiskFullBit) == DiskFullBit);
         this.flagBits &= ~DiskFullBit;
         return result;
+    }
+
+    public static void main(String[] args) {
+        System.out.println((0 & (2|4|16|8)));
+        System.out.println( (2|4|16|8));
     }
 }

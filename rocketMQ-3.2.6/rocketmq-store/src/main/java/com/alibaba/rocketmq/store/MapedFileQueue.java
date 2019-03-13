@@ -623,4 +623,9 @@ public class MapedFileQueue {
     public int getMapedFileSize() {
         return mapedFileSize;
     }
+
+    public static void main(String[] args) {
+        long createOffset = 0 - (0 % 1024);
+        System.out.println();
+    }
 }

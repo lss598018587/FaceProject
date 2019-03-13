@@ -21,6 +21,8 @@ import java.net.SocketAddress;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+
 import com.alibaba.rocketmq.broker.BrokerController;
 import com.alibaba.rocketmq.broker.mqtrace.ConsumeMessageContext;
 import com.alibaba.rocketmq.broker.mqtrace.ConsumeMessageHook;
@@ -489,5 +491,11 @@ public class SendMessageProcessor extends AbstractSendMessageProcessor implement
                 }
             }
         }
+    }
+
+    public static void main(String[] args) {
+        Random random = new Random(System.currentTimeMillis());
+        System.out.println(Math.abs(random.nextInt()% 99999999)% 4 );
+        System.out.println( Math.abs( random.nextInt() % 99999999) % 4);
     }
 }

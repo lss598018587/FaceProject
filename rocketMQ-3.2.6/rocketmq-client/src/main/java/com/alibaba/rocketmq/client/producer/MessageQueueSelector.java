@@ -26,5 +26,13 @@ import com.alibaba.rocketmq.common.message.MessageQueue;
  * @since 2013-7-25
  */
 public interface MessageQueueSelector {
+    /**
+      * 选择消息队列
+      *
+      * @param mqs 消息队列
+      * @param msg 消息
+      * @param arg 参数
+      * @return 消息队列
+      */
     MessageQueue select(final List<MessageQueue> mqs, final Message msg, final Object arg);
 }
