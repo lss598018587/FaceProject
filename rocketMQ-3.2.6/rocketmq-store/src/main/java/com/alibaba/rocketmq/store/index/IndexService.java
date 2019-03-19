@@ -40,7 +40,13 @@ import com.alibaba.rocketmq.store.config.StorePathConfigHelper;
 
 /**
  * 消息索引服务
- * 
+ *
+ * IndexService 是线程类服务，在启动 Broker 时启动该线程服务。
+ *
+ * 该类主要有两个功能，
+ *  第一，是定时的创建消息的索引；
+ *  第二，是为应用层提供访问 index索引文件的接口
+ *
  * @author shijia.wxr<vintage.wang@gmail.com>
  * @since 2013-7-21
  */
@@ -268,8 +274,27 @@ public class IndexService extends ServiceThread {
 
     public void buildIndex(Object[] req) {
         boolean breakdown = false;
+
+
+        //获取index文件,逻辑如下
+        /*  A）从 IndexFile 列表中获取最后一个 IndexFile 对象；若该对象对应的
+            Index 文件没有写满，即 IndexHeader 的 indexCount 不大于 2000W；则直接返回
+            该对象；
+            B）若获得的该对象为空或者已经写满，则创建新的 IndexFile 对象，即
+            新的 Index 文件，若是因为写满了而创建，则在创建新 Index 文件时将该写满的
+            Index 文件的 endPhyOffset 和 endTimestamp 值初始化给新 Index 文件中
+            IndexHeader 的 beginPhyOffset 和 beginTimestamp。
+            C）启一个线程，调用 IndexFile 对象的 fush 将上一个写满的 Index 文
+            件持久化到磁盘物理文件中；然后更新 StoreCheckpoint.IndexMsgTimestamp
+            为该写满的 Index 文件中 IndexHeader 的 endTimestamp；
+        */
         IndexFile indexFile = retryGetAndCreateIndexFile();
         if (indexFile != null) {
+            /*  遍历 requestQueue 队列中的请求消息。 将每个请求消息的
+                commitlogOffset 值与获取的 IndexFile 文件的 endPhyOffset 进行比较，若小
+                于 endPhyOffset 值，则直接忽略该条请求信息； 对于消息类型为 Prepared 和
+                RollBack 的也直接忽略掉
+            */
             long endPhyOffset = indexFile.getEndPhyOffset();
             MSG_WHILE: for (Object o : req) {
                 DispatchRequest msg = (DispatchRequest) o;

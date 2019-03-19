@@ -522,7 +522,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
             }
         };
 
-        // 集群消息模型下，计算提交的消费进度。
+        // 集群消息模型下，更新本地的消费进度。
         boolean commitOffsetEnable = false;
         long commitOffsetValue = 0L;
         if (MessageModel.CLUSTERING == this.defaultMQPushConsumer.getMessageModel()) {

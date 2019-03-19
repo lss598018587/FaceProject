@@ -16,13 +16,13 @@ import java.util.List;
  */
 public class Consumer {
     public static void main(String[] args) throws MQClientException {
-        String name = "order_consumer3333";
+        String name = "miaomiaoTest";
         DefaultMQPushConsumer consumer = new DefaultMQPushConsumer(name);
-        consumer.setNamesrvAddr("rocketmq-nameserver1:9876;rocketmq-nameserver2:9876");
+        consumer.setNamesrvAddr("127.0.0.1:9876");
 //        consumer.setNamesrvAddr("10.211.55.7:9876;10.211.55.8:9876");
         //有堆积的消息，这才有用，不然都是一条一条接收的
         //不过这最多拉10条，可能5条，可能6条，都有可能
-        consumer.setConsumeMessageBatchMaxSize(10);
+        consumer.setConsumeMessageBatchMaxSize(6);
         /**
          * 只对同一个group有用
          * 设置Consumer第一次启动是从猎头开始消费还是队列尾部开始消费
@@ -30,26 +30,28 @@ public class Consumer {
          */
         consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_LAST_OFFSET);
 
-        consumer.subscribe("TopicTest222","");
+        consumer.subscribe("miaoTp3","");
 //        consumer.subscribe("TopicQuickStart","TagA");
 
         consumer.registerMessageListener(new MessageListenerConcurrently() {
             public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> list, ConsumeConcurrentlyContext consumeConcurrentlyContext) {
-                    MessageExt message =list.get(0);
+//                    MessageExt message = null;
                 try {
+                    for( MessageExt message :list ){
                         String topic = message.getTopic();
                         String msgBody = new String (message.getBody(),"utf-8");
                         String tag = message.getTags();
                         System.out.println("topic="+topic+",msgBody="+msgBody+",tag="+tag);
+                    }
 //                    if(1==1){
 //                        throw  new RuntimeException("yic");
 //                    }
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
-                    if(message.getReconsumeTimes() ==3){ //当重试次数达到3次
-                        //做jdbc操作，记录发送错误的queue消息，返回给mq服务器成功，
-                        return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
-                    }
+//                    if(message.getReconsumeTimes() ==3){ //当重试次数达到3次
+//                        //做jdbc操作，记录发送错误的queue消息，返回给mq服务器成功，
+//                        return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
+//                    }
                     //返回给mq服务器失败，让他继续重发
                     return ConsumeConcurrentlyStatus.RECONSUME_LATER;
                 } catch (Exception e){

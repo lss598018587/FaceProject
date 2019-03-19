@@ -10,15 +10,15 @@ import com.alibaba.rocketmq.common.message.Message;
  */
 public class Producer {
     public static void main(String[] args) throws MQClientException {
-        DefaultMQProducer producer=new DefaultMQProducer("MORGANA_PARTITION_COPPER_SUCC1");
-        producer.setNamesrvAddr("rocketmq-nameserver1:9876");
+        DefaultMQProducer producer=new DefaultMQProducer("miaomiaoTest");
+        producer.setNamesrvAddr("127.0.0.1:9876");
         producer.start();
 
-        int m = 20190127;
-        for (int i = 0; i < 5; i++) {
+        int m = 20190227;
+        for (int i = 0; i < 25; i++) {
             try {
 //                Message msg=new Message("TopicQuickStart","TagA",("Hello RocketMQ"+i).getBytes());
-                Message msg=new Message("TopicTest222","",(""+m).getBytes());
+                Message msg=new Message("miaoTp3","",(""+m).getBytes());
                 SendResult sendResult=producer.send(msg);
                 System.out.println(sendResult);
                 m++;

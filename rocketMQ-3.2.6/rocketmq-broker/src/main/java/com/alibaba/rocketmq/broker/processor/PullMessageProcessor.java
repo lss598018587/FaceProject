@@ -53,6 +53,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 
@@ -260,7 +261,7 @@ public class PullMessageProcessor implements NettyRequestProcessor {
                 return response;
             }
 
-            if (!subscriptionGroupConfig.isConsumeBroadcastEnable() //
+            if (!subscriptionGroupConfig.isConsumeBroadcastEnable()
                     && consumerGroupInfo.getMessageModel() == MessageModel.BROADCASTING) {
                 response.setCode(ResponseCode.NO_PERMISSION);
                 response.setRemark("the consumer group[" + requestHeader.getConsumerGroup()
@@ -517,5 +518,18 @@ public class PullMessageProcessor implements NettyRequestProcessor {
                 }
             }
         }
+    }
+
+
+    public static void main(String[] args) {
+        int [] m1 = new int[]{1,2,3,4};
+        int [] m2 = new int [5];
+        System.arraycopy(m1,0,m2,1,3);
+        for(Integer c : m2){
+            System.out.println(c);
+        }
+        ByteBuffer byteBuffer = ByteBuffer.allocate(10);
+        String c = "123";
+        byteBuffer.put(c.getBytes(),0,10);
     }
 }

@@ -114,19 +114,25 @@ public class IndexFile {
         if (this.indexHeader.getIndexCount() < this.indexNum) {
             int keyHash = indexKeyHashMethod(key);
             int slotPos = keyHash % this.hashSlotNum;
+            //首先根据 key 的 Hash 值计算出 absSlotPos 值；
             int absSlotPos = IndexHeader.INDEX_HEADER_SIZE + slotPos * HASH_SLOT_SIZE;
 
             FileLock fileLock = null;
 
             try {
                 // TODO 是否是读写锁
-                // fileLock = this.fileChannel.lock(absSlotPos, HASH_SLOT_SIZE,
+                // fileLock = this.fileChannel.lock(absSlotPos, hashSlotSize,
                 // false);
+                //根据 absSlotPos值作为 index文件的读取开始偏移量读取 4个字节的值，
+                //即为了避免 KEY 值的 hash 冲突，将之前的 key 值的索引顺序数给冲突了，故先
+                //从 slot Table 中的取当前存储的索引顺序数，若该值小于零或者大于当前的索
+                //引总数（ IndexHeader 的 indexCount 值）则视为无效，即置为 0；否则取出该位
+                //置的值，放入当前写入索引消息的 Index Linked 的 slotValue 字段中；
                 int slotValue = this.mappedByteBuffer.getInt(absSlotPos);
                 if (slotValue <= INVALID_INDEX || slotValue > this.indexHeader.getIndexCount()) {
                     slotValue = INVALID_INDEX;
                 }
-
+                //计算当前存时间距离第一个索引消息落在 Broker 的时间戳beginTimestamp 的差值，放入当前写入索引消息的 Index Linked 的 timeOffset字段中
                 long timeDiff = storeTimestamp - this.indexHeader.getBeginTimestamp();
 
                 // 时间差存储单位由毫秒改为秒
@@ -142,7 +148,7 @@ public class IndexFile {
                 else if (timeDiff < 0) {
                     timeDiff = 0;
                 }
-
+                //计算 absIndexPos 值，然后根据数据结构上值写入 Index Linked 中；
                 int absIndexPos =
                         IndexHeader.INDEX_HEADER_SIZE + this.hashSlotNum * HASH_SLOT_SIZE
                                 + this.indexHeader.getIndexCount() * INDEX_SIZE;
@@ -154,14 +160,17 @@ public class IndexFile {
                 this.mappedByteBuffer.putInt(absIndexPos + 4 + 8 + 4, slotValue);
 
                 // 更新哈希槽
+                //将索引总数写入 slot Table 的 absSlotPos 位置；
                 this.mappedByteBuffer.putInt(absSlotPos, this.indexHeader.getIndexCount());
 
-                // 第一次写入
+                //若为第一个索引，则更新 IndexHeader 的 beginTimestamp 和beginPhyOffset 字段；
                 if (this.indexHeader.getIndexCount() <= 1) {
                     this.indexHeader.setBeginPhyOffset(phyOffset);
                     this.indexHeader.setBeginTimestamp(storeTimestamp);
                 }
 
+                //更新 IndexHeader 的 endTimestamp 和 endPhyOffset 字段；
+                //将 IndexHeader 的 hashSlotCount 和 indexCount 字段值加 1；
                 this.indexHeader.incHashSlotCount();
                 this.indexHeader.incIndexCount();
                 this.indexHeader.setEndPhyOffset(phyOffset);
@@ -214,14 +223,10 @@ public class IndexFile {
         boolean result =
                 begin < this.indexHeader.getBeginTimestamp() && end > this.indexHeader.getEndTimestamp();
 
-        result =
-                result
-                        || (begin >= this.indexHeader.getBeginTimestamp() && begin <= this.indexHeader
+        result = result || (begin >= this.indexHeader.getBeginTimestamp() && begin <= this.indexHeader
                             .getEndTimestamp());
 
-        result =
-                result
-                        || (end >= this.indexHeader.getBeginTimestamp() && end <= this.indexHeader
+        result = result || (end >= this.indexHeader.getBeginTimestamp() && end <= this.indexHeader
                             .getEndTimestamp());
         return result;
     }

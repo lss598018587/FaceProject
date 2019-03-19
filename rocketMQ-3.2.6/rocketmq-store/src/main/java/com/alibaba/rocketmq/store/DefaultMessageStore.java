@@ -667,6 +667,7 @@ public class DefaultMessageStore implements MessageStore {
 
 
     public MessageExt lookMessageByOffset(long commitLogOffset) {
+        //为什么是4，理由呢
         SelectMapedBufferResult sbr = this.commitLog.getMessage(commitLogOffset, 4);
         if (null != sbr) {
             try {

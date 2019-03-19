@@ -51,8 +51,10 @@ public class ConsumeQueue {
     private final int mapedFileSize;
     // 最后一个消息对应的物理Offset
     private long maxPhysicOffset = -1;
-    // 逻辑队列的最小Offset，删除物理文件时，计算出来的最小Offset
-    // 实际使用需要除以 StoreUnitSize
+    /**
+     * 逻辑队列的最小Offset，删除物理文件时，计算出来的最小Offset
+     * 实际使用需要除以 StoreUnitSize
+     */
     private volatile long minLogicOffset = 0;
 
 

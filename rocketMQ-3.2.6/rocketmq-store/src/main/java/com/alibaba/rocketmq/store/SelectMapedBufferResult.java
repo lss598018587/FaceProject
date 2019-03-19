@@ -25,13 +25,21 @@ import java.nio.ByteBuffer;
  * @since 2013-7-21
  */
 public class SelectMapedBufferResult {
-    // 从队列中哪个绝对Offset开始
+    /**
+     * 从队列中哪个绝对Offset开始
+      */
     private final long startOffset;
-    // position从0开始
+    /**
+     * position从0开始
+     */
     private final ByteBuffer byteBuffer;
-    // 有效数据大小
+    /**
+     * 有效数据大小
+     */
     private int size;
-    // 用来释放内存
+    /**
+     * 用来释放内存
+     */
     private MapedFile mapedFile;
 
 
