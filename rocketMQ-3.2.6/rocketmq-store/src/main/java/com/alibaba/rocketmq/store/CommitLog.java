@@ -581,6 +581,7 @@ public class CommitLog {
                 msg.getSysFlag(),// 9
                 msg.getPreparedTransactionOffset());// 10
 
+            //消息存储在相应topic下面的queue的数据
             this.defaultMessageStore.putDispatchRequest(dispatchRequest);
 
             eclipseTimeInLock = this.defaultMessageStore.getSystemClock().now() - beginLockTimestamp;

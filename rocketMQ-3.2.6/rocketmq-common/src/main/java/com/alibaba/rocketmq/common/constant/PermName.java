@@ -83,8 +83,8 @@ public class PermName {
         System.out.println(8 | 2);
         System.out.println(6 & 2);
         System.out.println(6 & 4);
-        System.out.println(6 & 1);
+        System.out.println(PERM_WRITE | PERM_READ);
 
-
+        System.out.println(isInherited(PERM_WRITE | PERM_READ));
     }
 }

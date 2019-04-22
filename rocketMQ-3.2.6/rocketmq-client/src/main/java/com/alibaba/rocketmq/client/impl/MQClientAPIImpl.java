@@ -955,9 +955,14 @@ public class MQClientAPIImpl {
                 RemotingCommand.createRequestCommand(RequestCode.CONSUMER_SEND_MSG_BACK, requestHeader);
 
         requestHeader.setGroup(consumerGroupWithProjectGroup);
+        // 因为重试的消息被broker拿到后会修改topic，所以这里设置原始的topic
         requestHeader.setOriginTopic(msg.getTopic());
+        // broker会根据offset查询原始的消息
         requestHeader.setOffset(msg.getCommitLogOffset());
+        // 设置delayLevel，这个值决定了该消息是否会被延时消费、延时多久，
+        // 用户可以设置延时等级，默认是0，不延时(但是broker端会有逻辑：如果为0会加3)
         requestHeader.setDelayLevel(delayLevel);
+        // 设置最初的msgId
         requestHeader.setOriginMsgId(msg.getMsgId());
 
         RemotingCommand response = this.remotingClient.invokeSync(addr, request, timeoutMillis);

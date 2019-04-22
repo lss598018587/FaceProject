@@ -69,6 +69,7 @@ public class MessageSysFlag {
         System.out.println(TransactionNotType);
         System.out.println(TransactionPreparedType);
         System.out.println(TransactionCommitType);
-        System.out.println(TransactionRollbackType);
+        System.out.println(0&TransactionRollbackType);
+
     }
 }

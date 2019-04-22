@@ -46,8 +46,9 @@ public class ConsumeQueue {
     private final int queueId;
     // 写索引时用到的ByteBuffer
     private final ByteBuffer byteBufferIndex;
-    // 配置
+    //存储路径，默认{user.home}/store/consumequeue/{topic}/{queueId}
     private final String storePath;
+    //文件大小，默认30w * 20字节 = 600w字节
     private final int mapedFileSize;
     // 最后一个消息对应的物理Offset
     private long maxPhysicOffset = -1;
@@ -436,6 +437,8 @@ public class ConsumeQueue {
      *            消息在CommitLog存储的大小
      * @param tagsCode
      *            tags 计算出来的长整数
+     * @param cqOffset
+     *             已消费的指针
      * @return 是否成功
      */
     private boolean putMessagePostionInfo(final long offset, final int size, final long tagsCode,

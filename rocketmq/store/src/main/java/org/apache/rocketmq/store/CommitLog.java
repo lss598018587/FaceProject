@@ -590,6 +590,8 @@ public class CommitLog {
             //消息内容写入 MapedFile.mappedByteBuffer： MappedByteBuffer 对象，
             //即写入消息缓存中；由后台服务线程定时的将缓存中的消息刷盘到物理文件中
             result = mappedFile.appendMessage(msg, this.appendMessageCallback);
+            long readPosition = mappedFile.getReadPosition();
+            long brokerMaxOffset =  mappedFile.getFileFromOffset() + readPosition;
             //若最后一个 MapedFile 剩余空间不足够写入此次的消息内容，即返回状态为
             //END_OF_FILE 标记， 则再次调用 MapedFileQueue.getLastMapedFile 方法获取新
             //的 MapedFile 对象然后调用 MapedFile.appendMessage 方法重写写入，最后继续

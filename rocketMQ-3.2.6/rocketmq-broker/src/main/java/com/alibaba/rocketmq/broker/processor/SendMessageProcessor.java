@@ -173,6 +173,7 @@ public class SendMessageProcessor extends AbstractSendMessageProcessor implement
         // 另外如果频繁调用，是否会引起gc问题，需要关注 TODO
         MessageExt msgExt =
                 this.brokerController.getMessageStore().lookMessageByOffset(requestHeader.getOffset());
+
         if (null == msgExt) {
             response.setCode(ResponseCode.SYSTEM_ERROR);
             response.setRemark("look message by offset failed, " + requestHeader.getOffset());
@@ -189,7 +190,8 @@ public class SendMessageProcessor extends AbstractSendMessageProcessor implement
         // 客户端自动决定定时级别
         int delayLevel = requestHeader.getDelayLevel();
 
-        // 死信消息处理
+        // 死信消息处理，
+        // 判断是否超过最大重试次数或者delayLevel小于0，消息不会被重试，而是会被投递到死信队列（不会再被消费），topic是%DLQ%+group
         if (msgExt.getReconsumeTimes() >= subscriptionGroupConfig.getRetryMaxTimes()//
                 || delayLevel < 0) {
             newTopic = MixAll.getDLQTopic(requestHeader.getGroup());

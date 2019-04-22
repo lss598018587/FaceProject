@@ -585,11 +585,15 @@ public class MQClientInstance {
         try {
             if (this.lockNamesrv.tryLock(LockTimeoutMillis, TimeUnit.MILLISECONDS)) {
                 try {
+//                    System.out.println(Thread.currentThread().getId()+"--topic查询进来了>>>"+topic);
                     TopicRouteData topicRouteData;
                     if (isDefault && defaultMQProducer != null) {
                         topicRouteData =
                                 this.mQClientAPIImpl.getDefaultTopicRouteInfoFromNameServer(
-                                        defaultMQProducer.getCreateTopicKey(), 1000 * 3);
+                                        defaultMQProducer.getCreateTopicKey(), 10000 * 3);
+
+                        System.out.println(Thread.currentThread().getId()+"--true>>>"+defaultMQProducer.getCreateTopicKey()+">>>>>"+topicRouteData);
+
                         if (topicRouteData != null) {
                             for (QueueData data : topicRouteData.getQueueDatas()) {
                                 int queueNums =
@@ -601,7 +605,9 @@ public class MQClientInstance {
                         }
                     } else {
                         topicRouteData =
-                                this.mQClientAPIImpl.getTopicRouteInfoFromNameServer(topic, 1000 * 3);
+                                this.mQClientAPIImpl.getTopicRouteInfoFromNameServer(topic, 10000 * 3);
+
+                        System.out.println(Thread.currentThread().getId()+"--"+topic+">>>>>"+topicRouteData);
                     }
                     if (topicRouteData != null) {
                         TopicRouteData old = this.topicRouteTable.get(topic);
@@ -664,6 +670,7 @@ public class MQClientInstance {
                             && !topic.equals(MixAll.DEFAULT_TOPIC)) {
                         log.warn("updateTopicRouteInfoFromNameServer Exception", e);
                     }
+//                    System.out.println(Thread.currentThread().getId()+"---报错了");
                 } finally {
                     this.lockNamesrv.unlock();
                 }

@@ -15,10 +15,10 @@ public class Producer {
         producer.start();
 
         int m = 20190227;
-        for (int i = 0; i < 25; i++) {
+        for (int i = 0; i < 1; i++) {
             try {
 //                Message msg=new Message("TopicQuickStart","TagA",("Hello RocketMQ"+i).getBytes());
-                Message msg=new Message("miaoTp3","",(""+m).getBytes());
+                Message msg=new Message("miaoTp8","",(""+m).getBytes());
                 SendResult sendResult=producer.send(msg);
                 System.out.println(sendResult);
                 m++;

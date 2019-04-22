@@ -37,10 +37,11 @@ public class PushConsumerTest {
          * 一个应用创建一个Consumer，由应用来维护此对象，可以设置为全局对象或者单例<br>
          * 注意：ConsumerGroupName需要由应用来保证唯一
          */
-        DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("CID_002");
+        DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("miaomiaoTest");
 
-        consumer.setNamesrvAddr("rocketmq-nameserver1:9876;rocketmq-nameserver2:9876");
-        consumer.subscribe("TopicTest222","");
+        consumer.setNamesrvAddr("127.0.0.1:9876");
+//        consumer.setNamesrvAddr("192.168.1.121:9876;192.168.1.104:9876");
+        consumer.subscribe("miaoTp01","");
 
         /**
          * 设置Consumer第一次启动是从队列头部开始消费还是队列尾部开始消费<br>
@@ -56,11 +57,16 @@ public class PushConsumerTest {
             @Override
             public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs,
                     ConsumeConcurrentlyContext context) {
-                System.out.println(Thread.currentThread().getName() + " Receive New Messages: " + msgs);
+                System.out.println("线程编号："+Thread.currentThread().getId() + "接受到的消息数: " + msgs.size());
+                for(MessageExt ext :msgs){
+                    System.out.println("ext>>>"+ext);
+                    System.out.println("ext>>>"+ext.getSysFlag());
+                    System.out.println("收到的消息:"+ext.getBody().toString());
+                }
 
-                MessageExt msg = msgs.get(0);
-                System.out.println(msg);
-                return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
+
+
+                return ConsumeConcurrentlyStatus.RECONSUME_LATER;
             }
         });
 

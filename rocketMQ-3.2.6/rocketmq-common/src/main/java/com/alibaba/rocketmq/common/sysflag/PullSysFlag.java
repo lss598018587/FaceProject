@@ -77,4 +77,16 @@ public class PullSysFlag {
     public static boolean hasClassFilterFlag(final int sysFlag) {
         return (sysFlag & FLAG_CLASS_FILTER) == FLAG_CLASS_FILTER;
     }
+
+    public static void main(String[] args) {
+        int flag =0;
+        if (true) {
+            flag |= FLAG_COMMIT_OFFSET;
+        }
+
+        if (true) {
+            flag |= FLAG_SUSPEND;
+        }
+        System.out.println(flag);
+    }
 }

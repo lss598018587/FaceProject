@@ -643,7 +643,8 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
                 this.defaultMQPushConsumer.getConsumerGroup(), delayLevel, 5000);
         }
         catch (Exception e) {
-            // 异常时，使用Client内置Producer发回消息
+            // 如果消费失败的消息发送回broker失败了，会再重试一次，和try里面的方法不一样的地方是这里直接修改topic
+            // 为重试topic然后和producer发送消息的方法一样发送到brok
             log.error("sendMessageBack Exception, " + this.defaultMQPushConsumer.getConsumerGroup(), e);
 
             Message newMsg =

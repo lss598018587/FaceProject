@@ -583,7 +583,9 @@ public class DefaultMQProducerImpl implements MQProducerInner {
 
     private TopicPublishInfo tryToFindTopicPublishInfo(final String topic) {
         TopicPublishInfo topicPublishInfo = this.topicPublishInfoTable.get(topic);
+//        System.out.println(Thread.currentThread().getId()+"--开始走topic查看00000");
         if (null == topicPublishInfo || !topicPublishInfo.ok()) {
+//            System.out.println(Thread.currentThread().getId()+"--开始走topic查看11111");
             this.topicPublishInfoTable.putIfAbsent(topic, new TopicPublishInfo());
             this.mQClientFactory.updateTopicRouteInfoFromNameServer(topic);
             topicPublishInfo = this.topicPublishInfoTable.get(topic);
@@ -592,6 +594,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
         if (topicPublishInfo.isHaveTopicRouterInfo() || (topicPublishInfo != null && topicPublishInfo.ok())) {
             return topicPublishInfo;
         } else {
+//            System.out.println(Thread.currentThread().getId()+"--开始走topic查看22222");
             this.mQClientFactory.updateTopicRouteInfoFromNameServer(topic, true, this.defaultMQProducer);
             topicPublishInfo = this.topicPublishInfoTable.get(topic);
             return topicPublishInfo;
@@ -625,7 +628,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
                 if (tranMsg != null && Boolean.parseBoolean(tranMsg)) {
                     sysFlag |= MessageSysFlag.TransactionPreparedType;
                 }
-
+                System.out.println("发送消息，标识为sysFlag="+sysFlag);
                 //在接下里，如果该生产者配置了相关的注册了chackForbiddenHook，则在这里将会走一遍所有的注册了的checkForbidden钩子保证本来配置被禁发的消息不会被发送出去。
                 if (hasCheckForbiddenHook()) {
                     CheckForbiddenContext checkForbiddenContext = new CheckForbiddenContext();
@@ -1039,5 +1042,13 @@ public class DefaultMQProducerImpl implements MQProducerInner {
 
     public void setServiceState(ServiceState serviceState) {
         this.serviceState = serviceState;
+    }
+
+
+    public static void main(String[] args) {
+        System.out.println(0|1);
+
+        System.out.println(0|4);
+        System.out.println(1|4);
     }
 }

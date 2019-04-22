@@ -667,11 +667,11 @@ public class DefaultMessageStore implements MessageStore {
 
 
     public MessageExt lookMessageByOffset(long commitLogOffset) {
-        //为什么是4，理由呢
+        //为什么是4，理由呢————拿出消息的总长度 byteBuffer第一个存的就是int类型的一个整个消息的长度
         SelectMapedBufferResult sbr = this.commitLog.getMessage(commitLogOffset, 4);
         if (null != sbr) {
             try {
-                // 1 TOTALSIZE
+                // 1 一个byteBuff的消息的总长度
                 int size = sbr.getByteBuffer().getInt();
                 return lookMessageByOffset(commitLogOffset, size);
             }

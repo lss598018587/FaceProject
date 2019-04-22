@@ -174,7 +174,6 @@ public abstract class AbstractSendMessageProcessor implements NettyRequestProces
 
 	protected RemotingCommand msgCheck(final ChannelHandlerContext ctx,final SendMessageRequestHeader requestHeader,
 			final RemotingCommand response) {
-		// 妫�鏌roker鏉冮檺, 椤哄簭娑堟伅绂佸啓锛涢潪椤哄簭娑堟伅閫氳繃 nameserver 閫氱煡瀹㈡埛绔墧闄ょ鍐欏垎鍖�
         if (!PermName.isWriteable(this.brokerController.getBrokerConfig().getBrokerPermission())
                 && this.brokerController.getTopicConfigManager().isOrderTopic(requestHeader.getTopic())) {
             response.setCode(ResponseCode.NO_PERMISSION);
@@ -217,7 +216,6 @@ public abstract class AbstractSendMessageProcessor implements NettyRequestProces
                 RemotingHelper.parseChannelRemoteAddr(ctx.channel()), //
                 requestHeader.getDefaultTopicQueueNums(), topicSysFlag);
 
-            // 灏濊瘯鐪嬩笅鏄惁鏄け璐ユ秷鎭彂鍥�
             if (null == topicConfig) {
                 if (requestHeader.getTopic().startsWith(MixAll.RETRY_GROUP_TOPIC_PREFIX)) {
                     topicConfig =
