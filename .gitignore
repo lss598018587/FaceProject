@@ -1,4 +1,6 @@
 *dependency-reduced-pom.xml
+BrokerStartup.java
+NamesrvStartup.java
 .classpath
 .project
 .settings/
