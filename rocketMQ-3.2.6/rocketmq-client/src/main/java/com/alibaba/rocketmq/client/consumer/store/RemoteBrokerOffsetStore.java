@@ -68,6 +68,9 @@ public class RemoteBrokerOffsetStore implements OffsetStore {
     public void updateOffset(MessageQueue mq, long offset, boolean increaseOnly) {
         if (mq != null) {
             AtomicLong offsetOld = this.offsetTable.get(mq);
+//            if(mq.getTopic().equals("miaoTp01")){
+//                System.out.println("-------------topic:"+mq.getTopic()+",队列id:"+mq.getQueueId()+",更新的offset："+offset);
+//            }
             if (null == offsetOld) {
                 offsetOld = this.offsetTable.putIfAbsent(mq, new AtomicLong(offset));
             }
@@ -250,5 +253,24 @@ public class RemoteBrokerOffsetStore implements OffsetStore {
             cloneOffsetTable.put(mq, this.offsetTable.get(mq).get());
         }
         return cloneOffsetTable;
+    }
+
+
+    public static void main(String[] args) {
+          ConcurrentHashMap<MessageQueue, AtomicLong> offsetTable =
+                new ConcurrentHashMap<MessageQueue, AtomicLong>();
+        MessageQueue queue = new MessageQueue();
+        queue.setBrokerName("1");
+        queue.setQueueId(1);
+        queue.setTopic("topic123");
+        AtomicLong result = offsetTable.putIfAbsent(queue,new AtomicLong(1));
+        System.out.println(result);
+        result = offsetTable.putIfAbsent(queue,new AtomicLong(1));
+        System.out.println(result);
+        offsetTable.putIfAbsent(queue,new AtomicLong(2));
+        System.out.println(offsetTable.get(queue));
+        AtomicLong result1 = offsetTable.putIfAbsent(queue,new AtomicLong(3));
+        result1.set(5);
+        System.out.println(offsetTable.get(queue));
     }
 }

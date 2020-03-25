@@ -673,6 +673,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
                         MessageAccessor.clearProperty(msg, MessageConst.PROPERTY_RECONSUME_TIME);
                     }
                 }
+                System.out.println("requestHeader》》"+requestHeader);
                 //在一切准备就绪之后，调用客户端的API接口来实现消息的物理发送。
                 SendResult sendResult = this.mQClientFactory.getMQClientAPIImpl().sendMessage(//
                         brokerAddr,// 1

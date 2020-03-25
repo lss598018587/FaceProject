@@ -184,9 +184,9 @@ public class MQClientInstance {
                     this.mQClientAPIImpl.start();
                     //Start various schedule tasks
                     this.startScheduledTask();
-                    //Start pull service
+                    //开始拉取消息
                     this.pullMessageService.start();
-                    //Start rebalance service
+                    //与broker 实时 消息topic和queue的分配
                     this.rebalanceService.start();
                     //Start push service
                     this.defaultMQProducer.getDefaultMQProducerImpl().start(false);
@@ -224,6 +224,7 @@ public class MQClientInstance {
         }
 
         //定时从nameServer更新生产者消费者路由信息
+        //更新topic的信息，但不更新topic下面的queue
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
             @Override
@@ -585,14 +586,12 @@ public class MQClientInstance {
         try {
             if (this.lockNamesrv.tryLock(LockTimeoutMillis, TimeUnit.MILLISECONDS)) {
                 try {
-//                    System.out.println(Thread.currentThread().getId()+"--topic查询进来了>>>"+topic);
                     TopicRouteData topicRouteData;
                     if (isDefault && defaultMQProducer != null) {
                         topicRouteData =
                                 this.mQClientAPIImpl.getDefaultTopicRouteInfoFromNameServer(
                                         defaultMQProducer.getCreateTopicKey(), 10000 * 3);
 
-                        System.out.println(Thread.currentThread().getId()+"--true>>>"+defaultMQProducer.getCreateTopicKey()+">>>>>"+topicRouteData);
 
                         if (topicRouteData != null) {
                             for (QueueData data : topicRouteData.getQueueDatas()) {
@@ -607,7 +606,6 @@ public class MQClientInstance {
                         topicRouteData =
                                 this.mQClientAPIImpl.getTopicRouteInfoFromNameServer(topic, 10000 * 3);
 
-                        System.out.println(Thread.currentThread().getId()+"--"+topic+">>>>>"+topicRouteData);
                     }
                     if (topicRouteData != null) {
                         TopicRouteData old = this.topicRouteTable.get(topic);
@@ -670,7 +668,6 @@ public class MQClientInstance {
                             && !topic.equals(MixAll.DEFAULT_TOPIC)) {
                         log.warn("updateTopicRouteInfoFromNameServer Exception", e);
                     }
-//                    System.out.println(Thread.currentThread().getId()+"---报错了");
                 } finally {
                     this.lockNamesrv.unlock();
                 }

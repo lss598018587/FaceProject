@@ -399,6 +399,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
                     case FOUND:
                         // 设置下次拉取消息队列位置
                         long prevRequestOffset = pullRequest.getNextOffset();
+//                        System.out.println("下次拉取的偏移量>>>"+prevRequestOffset+"，所属topic："+pullRequest.getMessageQueue().getTopic()+",所属队列："+pullRequest.getMessageQueue().getQueueId());
                         pullRequest.setNextOffset(pullResult.getNextBeginOffset());
                         // 统计
                         long pullRT = System.currentTimeMillis() - beginTimestamp;
@@ -698,6 +699,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
 
             this.checkConfig();
 
+            //把%REPTY%+consumerGroup的topic请求加入队列
             this.copySubscription();
 
             if (this.defaultMQPushConsumer.getMessageModel() == MessageModel.CLUSTERING) {
@@ -713,6 +715,8 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
             this.rebalanceImpl.setAllocateMessageQueueStrategy(this.defaultMQPushConsumer
                 .getAllocateMessageQueueStrategy());
             this.rebalanceImpl.setmQClientFactory(this.mQClientFactory);
+
+
 
             this.pullAPIWrapper = new PullAPIWrapper(//
                 mQClientFactory,//
@@ -767,6 +771,8 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
             }
 
             mQClientFactory.start();
+
+
             log.info("the consumer [{}] start OK.", this.defaultMQPushConsumer.getConsumerGroup());
             this.serviceState = ServiceState.RUNNING;
             break;
@@ -780,6 +786,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
             break;
         }
 
+        //获取topic请求下的消费队列
         this.updateTopicSubscribeInfoWhenSubscriptionChanged();
 
         this.mQClientFactory.sendHeartbeatToAllBrokerWithLock();

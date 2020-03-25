@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Can-Redefine-Classes: true
+Premain-Class: com.wm.attach3.MyAgent
+Can-Retransform-Classes: true

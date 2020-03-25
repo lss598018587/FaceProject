@@ -26,7 +26,7 @@ import com.alibaba.rocketmq.common.message.MessageExt;
 import java.util.List;
 
 
-public class PushConsumerTest {
+public class PushConsumerTest2 {
 
     /**
      * 当前例子是PushConsumer用法，使用方式给用户感觉是消息从RocketMQ服务器推到了应用客户端。<br>

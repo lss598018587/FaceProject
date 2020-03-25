@@ -114,6 +114,9 @@ public class PullMessageService extends ServiceThread {
     }
 
 
+    /**
+     * 消费者根据 构建好的 PullRequest（里面包含topic break地址 ） 然后去拉取消息
+     */
     @Override
     public void run() {
         log.info(this.getServiceName() + " service started");

@@ -150,4 +150,22 @@ public class SendMessageRequestHeader implements CommandCustomHeader {
     public void setUnitMode(boolean isUnitMode) {
         this.unitMode = isUnitMode;
     }
+
+
+    @Override
+    public String toString() {
+        return "SendMessageRequestHeader{" +
+                "producerGroup='" + producerGroup + '\'' +
+                ", topic='" + topic + '\'' +
+                ", defaultTopic='" + defaultTopic + '\'' +
+                ", defaultTopicQueueNums=" + defaultTopicQueueNums +
+                ", queueId=" + queueId +
+                ", sysFlag=" + sysFlag +
+                ", bornTimestamp=" + bornTimestamp +
+                ", flag=" + flag +
+                ", properties='" + properties + '\'' +
+                ", reconsumeTimes=" + reconsumeTimes +
+                ", unitMode=" + unitMode +
+                '}';
+    }
 }

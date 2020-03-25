@@ -50,17 +50,41 @@ import com.alibaba.rocketmq.remoting.common.RemotingHelper;
  */
 public class ConsumeMessageOrderlyService implements ConsumeMessageService {
     private static final Logger log = ClientLogger.getLog();
+    /**
+     * 消费任务一次运行的最大时间。可以通过-Drocketmq.client.maxTimeConsumeContinuously来设置，默认为60s。
+     */
     private final static long MaxTimeConsumeContinuously = Long.parseLong(System.getProperty(
         "rocketmq.client.maxTimeConsumeContinuously", "60000"));
 
     private volatile boolean stopped = false;
 
+    /**
+     * 消息消费者实现类。
+     */
     private final DefaultMQPushConsumerImpl defaultMQPushConsumerImpl;
+    /**
+     * 消息消费者。
+     */
     private final DefaultMQPushConsumer defaultMQPushConsumer;
+    /**
+     * 顺序消息消费监听器。
+     */
     private final MessageListenerOrderly messageListener;
+    /**
+     * 消息消费任务。
+     */
     private final BlockingQueue<Runnable> consumeRequestQueue;
+    /**
+     * ：消息消费线程池。
+     */
     private final ThreadPoolExecutor consumeExecutor;
+    /**
+     * 消息消费组。
+     */
     private final String consumerGroup;
+    /**
+     * 消息消费队列锁，
+     */
     private final MessageQueueLock messageQueueLock = new MessageQueueLock();
 
     private final ScheduledExecutorService scheduledExecutorService;
@@ -73,8 +97,10 @@ public class ConsumeMessageOrderlyService implements ConsumeMessageService {
 
         this.defaultMQPushConsumer = this.defaultMQPushConsumerImpl.getDefaultMQPushConsumer();
         this.consumerGroup = this.defaultMQPushConsumer.getConsumerGroup();
+        //创建任务拉取队列，注意，这里使用的是无界队列。
         this.consumeRequestQueue = new LinkedBlockingQueue<Runnable>();
 
+        //创建消费者消费线程池，注意由于消息任务队列consumeRequestQueue使用的是无界队列，故线程池中最大线程数量取自 consumeThreadMin。
         this.consumeExecutor = new ThreadPoolExecutor(//
             this.defaultMQPushConsumer.getConsumeThreadMin(),//
             this.defaultMQPushConsumer.getConsumeThreadMax(),//
@@ -83,6 +109,7 @@ public class ConsumeMessageOrderlyService implements ConsumeMessageService {
             this.consumeRequestQueue,//
             new ThreadFactoryImpl("ConsumeMessageThread_"));
 
+        //创建调度线程，该线程主要调度定时任务，延迟延迟消费
         this.scheduledExecutorService =
                 Executors.newSingleThreadScheduledExecutor(new ThreadFactoryImpl(
                     "ConsumeMessageScheduledThread_"));
@@ -171,6 +198,9 @@ public class ConsumeMessageOrderlyService implements ConsumeMessageService {
         }
 
 
+        /**
+         * order顺序消费
+         */
         @Override
         public void run() {
             if (this.processQueue.isDropped()) {
@@ -179,6 +209,10 @@ public class ConsumeMessageOrderlyService implements ConsumeMessageService {
                 return;
             }
             // 获得 Consumer 消息队列锁
+            /**
+             * 获取MessageQueue对应的锁，在消费某一个消息消费队列时先加锁
+             * 意味着一个消费者内消费线程池中的线程并发度是消息消费队列级别，同一个消费队列在同一时刻只会被一个线程消费，其他线程排队消费。
+             */
             final Object objLock = messageQueueLock.fetchLockObject(this.messageQueue);
             synchronized (objLock) {
                 // (广播模式) 或者 (集群模式 && Broker消息队列锁有效)
@@ -214,6 +248,10 @@ public class ConsumeMessageOrderlyService implements ConsumeMessageService {
                             break;
                         }
                         // 当前周期消费时间超过连续时长，默认：60s，提交延迟消费请求。默认情况下，每消费1分钟休息10ms。
+                        /**
+                         * 顺序消息消费处理逻辑，每一个ConsumeRequest消费任务不是以消费消息条数来计算，而是根据消费时间，
+                         * 默认当消费时长大于MAX_TIME_CONSUME_CONTINUOUSLY，默认60s后，本次消费任务结束，由消费组内其他线程继续消费。
+                         */
                         long interval = System.currentTimeMillis() - beginTime;
                         if (interval > MaxTimeConsumeContinuously) {
                             ConsumeMessageOrderlyService.this.submitConsumeRequestLater(processQueue,

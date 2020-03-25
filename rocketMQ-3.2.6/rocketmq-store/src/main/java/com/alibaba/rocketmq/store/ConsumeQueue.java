@@ -153,6 +153,11 @@ public class ConsumeQueue {
 
     /**
      * 二分查找查找消息发送时间最接近timestamp逻辑队列的offset
+     *
+     * 把一个mappfile找出来
+     * 然后把byteBuffer取出来，通过最小和最大的offset
+     * 采用二分法，去主的commitlog里面查找消息，对比存进去的storeTime，比对时间
+     * 找到比传入时间稍大的一条
      */
     public long getOffsetInQueueByTime(final long timestamp) {
         MapedFile mapedFile = this.mapedFileQueue.getMapedFileByTime(timestamp);

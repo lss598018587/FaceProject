@@ -78,15 +78,41 @@ public class AllocateMessageQueueAveragely implements AllocateMessageQueueStrate
         }
         // 平均分配
         int index = cidAll.indexOf(currentCID);// 第几个consumer。
-        int mod = mqAll.size() % cidAll.size();// 余数，即多少消息队列无法平均分配。
+        int mod = mqAll.size() % cidAll.size();// 余数，即多少消息队列无法平均分配。  4%2=0;  mod=0
         int averageSize =
                 mqAll.size() <= cidAll.size() ? 1 : (mod > 0 && index < mod ? mqAll.size() / cidAll.size()
-                        + 1 : mqAll.size() / cidAll.size());
+                        + 1 : mqAll.size() / cidAll.size()); //  mqAll.size() / cidAll.size()  =====> 4/2=2; averageSize=2
         int startIndex = (mod > 0 && index < mod) ? index * averageSize : index * averageSize + mod; // 有余数的情况下，[0, mod) 平分余数，即每consumer多分配一个节点；第index开始，跳过前mod余数。
         int range = Math.min(averageSize, mqAll.size() - startIndex); // 分配队列数量。之所以要Math.min()的原因是，mqAll.size() <= cidAll.size()，部分consumer分配不到消息队列。
         for (int i = 0; i < range; i++) {
             result.add(mqAll.get((startIndex + i) % mqAll.size()));
         }
         return result;
+    }
+
+    public static void main(String[] args) {
+        List<String> cidAll = new ArrayList<String>();
+        cidAll.add("1");
+        cidAll.add("2");
+        cidAll.add("3");
+
+        List<String> result = new ArrayList<String>();
+        List<String> mqAll = new ArrayList<String>();
+        mqAll.add("1");
+        mqAll.add("2");
+        mqAll.add("3");
+        mqAll.add("4");
+        String currentCID = "1";
+
+        int index = cidAll.indexOf(currentCID);// 第几个consumer。
+        int mod = mqAll.size() % cidAll.size();// 余数，即多少消息队列无法平均分配。  4%2=0;  mod=0
+        int averageSize =
+                mqAll.size() <= cidAll.size() ? 1 : (mod > 0 && index < mod ? mqAll.size() / cidAll.size()
+                        + 1 : mqAll.size() / cidAll.size()); //  mqAll.size() / cidAll.size()  =====> 4/2=2; averageSize=2
+        int startIndex = (mod > 0 && index < mod) ? index * averageSize : index * averageSize + mod; // 有余数的情况下，[0, mod) 平分余数，即每consumer多分配一个节点；第index开始，跳过前mod余数。
+        int range = Math.min(averageSize, mqAll.size() - startIndex); // 分配队列数量。之所以要Math.min()的原因是，mqAll.size() <= cidAll.size()，部分consumer分配不到消息队列。
+        for (int i = 0; i < range; i++) {
+            result.add(mqAll.get((startIndex + i) % mqAll.size()));
+        }
     }
 }

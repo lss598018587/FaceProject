@@ -197,6 +197,8 @@ public abstract class RebalanceImpl {
      * @date: 19/1/22 下午8:32
      */
     public void lockAll() {
+        //根据当前负载的消息队列，按照Broker分类存储在Map。
+        // 负载的消息队列在RebalanceService时根据当前消费者数量与消息消费队列按照负载算法进行分配，然后尝试对该消息队列加锁，如果申请锁成功，则加入到待拉取任务中。
         HashMap<String, Set<MessageQueue>> brokerMqs = this.buildProcessQueueTableByBrokerName();
 
         Iterator<Entry<String, Set<MessageQueue>>> it = brokerMqs.entrySet().iterator();
@@ -208,6 +210,7 @@ public abstract class RebalanceImpl {
             if (mqs.isEmpty())
                 continue;
 
+            //根据Broker获取主节点的地址
             FindBrokerResult findBrokerResult =
                     this.mQClientFactory.findBrokerAddressInSubscribe(brokerName, MixAll.MASTER_ID, true);
             if (findBrokerResult != null) {
@@ -217,10 +220,12 @@ public abstract class RebalanceImpl {
                 requestBody.setMqSet(mqs);
 
                 try {
+                    //向Broker发送锁定消息队列请求，该方法会返回本次成功锁定的消息消费队列，关于Broker端消息队列锁定实现见下文详细分析。
                     Set<MessageQueue> lockOKMQSet =
                             this.mQClientFactory.getMQClientAPIImpl().lockBatchMQ(
                                     findBrokerResult.getBrokerAddr(), requestBody, 1000);
 
+                    //遍历本次成功锁定的队列来更新对应的ProcessQueue的locked状态，如果locked为false,则设置成true,并更新锁定时间。
                     for (MessageQueue mq : lockOKMQSet) {
                         ProcessQueue processQueue = this.processQueueTable.get(mq);
                         if (processQueue != null) {
@@ -232,6 +237,7 @@ public abstract class RebalanceImpl {
                             processQueue.setLastLockTimestamp(System.currentTimeMillis());
                         }
                     }
+                    //遍历mqs，如果消息队列未成功锁定，需要将ProceeQueue的locked状态为false，在该处理队列未被其他消费者锁定之前，该消息队列将暂停拉取消息。
                     for (MessageQueue mq : mqs) {
                         if (!lockOKMQSet.contains(mq)) {
                             ProcessQueue processQueue = this.processQueueTable.get(mq);
@@ -294,10 +300,14 @@ public abstract class RebalanceImpl {
             case CLUSTERING: {
                 /**
                  * 1.先通过topic得到topic对应的messageQueue数据
+                 * 2.如果是2个消费者。总共有4个queue
+                 * 每个mq到这里这里的mqSet就是4个queue
                  */
                 Set<MessageQueue> mqSet = this.topicSubscribeInfoTable.get(topic);
                 /**
                  * 2.根据topic来获取所有订阅这个topic的消费者
+                 * 比如我现在有两个ip消费这个topic
+                 * 那这里cidAll就会返回 两个消费的ip
                  */
                 List<String> cidAll = this.mQClientFactory.findConsumerIdList(topic, consumerGroup);
                 if (null == mqSet) {
@@ -323,7 +333,7 @@ public abstract class RebalanceImpl {
 
                     AllocateMessageQueueStrategy strategy = this.allocateMessageQueueStrategy;
 
-                    // 根据 队列分配策略 分配消息队列
+                    // 根据 队列分配策略 分配消息队列，就是在这里对topic里所有的队列去分配，一些机器上分配相应的消费queue
                     List<MessageQueue> allocateResult = null;
                     try {
                         allocateResult = strategy.allocate(//
@@ -415,6 +425,7 @@ public abstract class RebalanceImpl {
             if (mq.getTopic().equals(topic)) {
                 if (!mqSet.contains(mq)) {// 不包含的队列
                     pq.setDropped(true);
+                    //去给远端的队列解锁
                     if (this.removeUnnecessaryMessageQueue(mq, pq)) {
                         it.remove();
                         changed = true;

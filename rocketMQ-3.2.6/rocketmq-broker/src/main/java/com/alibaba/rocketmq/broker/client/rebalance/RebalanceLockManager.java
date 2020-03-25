@@ -83,10 +83,13 @@ public class RebalanceLockManager {
 
 
     private boolean isLocked(final String group, final MessageQueue mq, final String clientId) {
+        //查询group下的是否有被锁的元素
         ConcurrentHashMap<MessageQueue, LockEntry> groupValue = this.mqLockTable.get(group);
         if (groupValue != null) {
+            //根据group查询出被锁的元素，是否有这个topic和queue的对象
             LockEntry lockEntry = groupValue.get(mq);
             if (lockEntry != null) {
+                //查询是否是被 某个 clientId 被锁的 ，如果是，就把过期时间延长
                 boolean locked = lockEntry.isLocked(clientId);
                 if (locked) {
                     lockEntry.setLastUpdateTimestamp(System.currentTimeMillis());

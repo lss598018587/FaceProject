@@ -55,7 +55,7 @@ public class ProcessQueue {
      * 消息映射
      * key：消息队列位置
      */
-    private final TreeMap<Long, MessageExt> msgTreeMap = new TreeMap<Long, MessageExt>();
+    private final TreeMap<Long /* queueOffset */, MessageExt> msgTreeMap = new TreeMap<Long, MessageExt>();
     // ProcessQueue中保存的消息里的最大offset，为ConsumeQueue的offset
     private volatile long queueOffsetMax = 0L;
     // 当前保存的消息数，放进来的时候会加，移除的时候会减
@@ -147,7 +147,8 @@ public class ProcessQueue {
                 }
                 msgCount.addAndGet(validMsgCnt);
 
-                // 计算是否正在消费
+                // 计算是否正在消费 msgTreeMap不为空，consuming初始的时候为false，
+                //当msgTreeMap为空的时候，consuming会被设为false
                 if (!msgTreeMap.isEmpty() && !this.consuming) {
                     dispatchToConsume = true;
                     this.consuming = true;
@@ -175,6 +176,50 @@ public class ProcessQueue {
 
         return dispatchToConsume;
     }
+
+    /**
+     * 描述：获得持有消息前N条
+     *
+     * @author: miaomiao
+     * @date: 19/3/13 下午5:00
+     * @param  batchSize 条数
+     * @return  消息
+     */
+    public List<MessageExt> takeMessags(final int batchSize) {
+        List<MessageExt> result = new ArrayList<MessageExt>(batchSize);
+        final long now = System.currentTimeMillis();
+        try {
+            this.lockTreeMap.writeLock().lockInterruptibly();
+            this.lastConsumeTimestamp = now;
+            try {
+                if (!this.msgTreeMap.isEmpty()) {
+                    for (int i = 0; i < batchSize; i++) {
+                        Map.Entry<Long, MessageExt> entry = this.msgTreeMap.pollFirstEntry();
+                        if (entry != null) {
+                            result.add(entry.getValue());
+                            msgTreeMapTemp.put(entry.getKey(), entry.getValue());
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                }
+
+                if (result.isEmpty()) {
+                    consuming = false;
+                }
+            }
+            finally {
+                this.lockTreeMap.writeLock().unlock();
+            }
+        }
+        catch (InterruptedException e) {
+            log.error("take Messages exception", e);
+        }
+
+        return result;
+    }
+
 
 
     public long getMaxSpan() {
@@ -338,48 +383,7 @@ public class ProcessQueue {
         }
     }
 
-    /**
-     * 描述：获得持有消息前N条
-     * 
-     * @author: miaomiao
-     * @date: 19/3/13 下午5:00
-     * @param  batchSize 条数
-     * @return  消息
-     */
-    public List<MessageExt> takeMessags(final int batchSize) {
-        List<MessageExt> result = new ArrayList<MessageExt>(batchSize);
-        final long now = System.currentTimeMillis();
-        try {
-            this.lockTreeMap.writeLock().lockInterruptibly();
-            this.lastConsumeTimestamp = now;
-            try {
-                if (!this.msgTreeMap.isEmpty()) {
-                    for (int i = 0; i < batchSize; i++) {
-                        Map.Entry<Long, MessageExt> entry = this.msgTreeMap.pollFirstEntry();
-                        if (entry != null) {
-                            result.add(entry.getValue());
-                            msgTreeMapTemp.put(entry.getKey(), entry.getValue());
-                        }
-                        else {
-                            break;
-                        }
-                    }
-                }
 
-                if (result.isEmpty()) {
-                    consuming = false;
-                }
-            }
-            finally {
-                this.lockTreeMap.writeLock().unlock();
-            }
-        }
-        catch (InterruptedException e) {
-            log.error("take Messages exception", e);
-        }
-
-        return result;
-    }
 
 
     public void clear() {
@@ -485,5 +489,20 @@ public class ProcessQueue {
 
     public void setLastConsumeTimestamp(long lastConsumeTimestamp) {
         this.lastConsumeTimestamp = lastConsumeTimestamp;
+    }
+
+    public static void main(String[] args) {
+        // creating maps
+        TreeMap<Integer, String> treemap = new TreeMap<Integer, String>();
+
+        // populating tree map
+        treemap.put(2, "two");
+        treemap.put(1, "one");
+        treemap.put(3, "three");
+        treemap.put(6, "six");
+        treemap.put(5, "five");
+
+
+        System.out.println("First key is: " + treemap.firstKey());
     }
 }

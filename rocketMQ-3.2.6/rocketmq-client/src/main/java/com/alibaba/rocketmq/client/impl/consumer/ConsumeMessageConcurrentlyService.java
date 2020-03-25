@@ -146,6 +146,9 @@ public class ConsumeMessageConcurrentlyService implements ConsumeMessageService 
             long beginTimestamp = System.currentTimeMillis();
 
             try {
+//                if(msgs.get(0).getTopic().equals("%RETRY%miaomiaoTest")){
+//                    System.out.println("xixixixix>>>>>"+msgs.get(0));
+//                }
                 // 当消息为重试消息，设置Topic为原始Topic
                 ConsumeMessageConcurrentlyService.this.resetRetryTopic(msgs);
                 // 进行消费
@@ -211,7 +214,6 @@ public class ConsumeMessageConcurrentlyService implements ConsumeMessageService 
 
     public boolean sendMessageBack(final MessageExt msg, final ConsumeConcurrentlyContext context) {
         int delayLevel = context.getDelayLevelWhenNextConsume();
-        System.out.println("delayLevel》》》"+delayLevel);
         try {
             this.defaultMQPushConsumerImpl.sendMessageBack(msg, delayLevel, context.getMessageQueue()
                 .getBrokerName());
@@ -310,6 +312,8 @@ public class ConsumeMessageConcurrentlyService implements ConsumeMessageService 
         // 移除消费成功消息，并更新最新消费进度
         long offset = consumeRequest.getProcessQueue().removeMessage(consumeRequest.getMsgs());
         if (offset >= 0) {
+//            MessageExt ext =  consumeRequest.getMsgs().get(0);
+//            System.out.println("11111111进来更新offset："+offset+"，msg消息里的topic:"+ext.getTopic()+",msg消息里的queueid:"+ext.getQueueId()+",msg消息里的offset:"+ext.getQueueOffset());
             this.defaultMQPushConsumerImpl.getOffsetStore().updateOffset(consumeRequest.getMessageQueue(),
                 offset, true);
         }
@@ -480,6 +484,7 @@ public class ConsumeMessageConcurrentlyService implements ConsumeMessageService 
     public void resetRetryTopic(final List<MessageExt> msgs) {
         final String groupTopic = MixAll.getRetryTopic(consumerGroup);
         for (MessageExt msg : msgs) {
+            //这里拿出来的是原始的topic
             String retryTopic = msg.getProperty(MessageConst.PROPERTY_RETRY_TOPIC);
             if (retryTopic != null && groupTopic.equals(msg.getTopic())) {
                 msg.setTopic(retryTopic);
